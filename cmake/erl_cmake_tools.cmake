@@ -481,8 +481,8 @@ macro (erl_find_package)
         endif ()
 
         if (ERL_PACKAGE STREQUAL "Python3")
-            message("To specify python interpreter, run `cmake -DPython3_ROOT_DIR=/path/to/python3_bin_folder ..`"
-                    "With CLion, Python_EXECUTABLE is set to the selected python interpreter")
+            message(STATUS "To specify python interpreter, run `cmake -DPython3_ROOT_DIR=/path/to/python3_bin_folder`"
+                           "With CLion, Python_EXECUTABLE is set to the selected python interpreter")
 
             if (DEFINED Python_EXECUTABLE)
                 get_filename_component(Python3_ROOT_DIR ${Python_EXECUTABLE} DIRECTORY)
@@ -695,34 +695,31 @@ endmacro ()
 
 macro (erl_set_project_paths_ros2)
 
-    # <INSTALL_PREFIX>/lib/PROJECT_NAME
-    set(${PROJECT_NAME}_INSTALL_BINARY_DIR lib/${PROJECT_NAME} # ROS2 does not install to bin, instead to
-                                                               # lib/PROJECT_NAME
-        CACHE PATH "binary directory during installation" FORCE)
+    # <INSTALL_PREFIX>/lib/PROJECT_NAME, ROS2 does not install to bin, instead to lib/PROJECT_NAME
+    set(${PROJECT_NAME}_INSTALL_BINARY_DIR lib/${PROJECT_NAME} CACHE PATH "binary directory to install" FORCE)
 
-    set(${PROJECT_NAME}_INSTALL_RUNTIME_DIR bin CACHE PATH "runtime directory during installation" FORCE)
+    set(${PROJECT_NAME}_INSTALL_RUNTIME_DIR bin CACHE PATH "runtime directory to install" FORCE)
 
     # <INSTALL_PREFIX>/etc/PROJECT_NAME
-    set(${PROJECT_NAME}_INSTALL_ETC_DIR etc/${PROJECT_NAME} CACHE PATH "etc directory during installation" FORCE)
+    set(${PROJECT_NAME}_INSTALL_ETC_DIR etc/${PROJECT_NAME} CACHE PATH "etc directory to install" FORCE)
 
-    # <INSTALL_PREFIX>/include
-    set(${PROJECT_NAME}_INSTALL_INCLUDE_DIR include CACHE PATH "include directory during installation" FORCE)
+    # <INSTALL_PREFIX>/include/PROJECT_NAME
+    set(${PROJECT_NAME}_INSTALL_INCLUDE_DIR include/${PROJECT_NAME} CACHE PATH "include directory to install" FORCE)
 
     # <INSTALL_PREFIX>/lib
-    set(${PROJECT_NAME}_INSTALL_LIBRARY_DIR lib CACHE PATH "library directory during installation" FORCE)
+    set(${PROJECT_NAME}_INSTALL_LIBRARY_DIR lib CACHE PATH "library directory to install" FORCE)
 
     # <INSTALL_PREFIX>/lib/pythonX.Y/dist-packages/PROJECT_NAME
     erl_config_python3()
     set(ROS2_PYTHON_SITE_PACKAGES_DIR lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages)
     set(${PROJECT_NAME}_INSTALL_PYTHON_DIR ${ROS2_PYTHON_SITE_PACKAGES_DIR}/${PROJECT_NAME}
-        CACHE PATH "python directory during installation" FORCE)
+        CACHE PATH "python directory to install" FORCE)
 
     # <INSTALL_PREFIX>/share/PROJECT_NAME
-    set(${PROJECT_NAME}_INSTALL_SHARE_DIR share/${PROJECT_NAME} CACHE PATH "share directory during installation" FORCE)
+    set(${PROJECT_NAME}_INSTALL_SHARE_DIR share/${PROJECT_NAME} CACHE PATH "share directory to install" FORCE)
 
     # <INSTALL_PREFIX>/share/PROJECT_NAME/cmake
-    set(${PROJECT_NAME}_INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake #
-        CACHE PATH "cmake directory during installation" FORCE)
+    set(${PROJECT_NAME}_INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake CACHE PATH "cmake directory to install" FORCE)
 
 endmacro ()
 
@@ -1065,16 +1062,21 @@ macro (erl_setup_ros2)
         if (NOT DEFINED CMAKE_C_COMPILER)
             message(FATAL_ERROR "Please add C to the project languages when using ROS2 interfaces")
         endif ()
-        rosidl_generate_interfaces(${PROJECT_NAME}_msgs ${interface_files} DEPENDENCIES
-                                   ${${PROJECT_NAME}_MSG_DEPENDENCIES})
-        # rosidl_get_typesupport_target(${PROJECT_NAME}_msgs_LIBRARIES ${PROJECT_NAME}_msgs "rosidl_typesupport_cpp" )
-        # erl_collect_targets(LIBRARIES ${${PROJECT_NAME}_msgs_LIBRARIES})
-        message(STATUS "Generated ROS2 interface libraries: ${PROJECT_NAME}_msgs.
-            Please link them to your targets with ${PROJECT_NAME}_msgs when using
+        if (TARGET ${PROJECT_NAME})
+            set(target ${PROJECT_NAME}_msgs)
+        else ()
+            set(target ${PROJECT_NAME})
+        endif ()
+        rosidl_generate_interfaces(${target} ${interface_files} DEPENDENCIES ${${PROJECT_NAME}_MSG_DEPENDENCIES})
+        ament_export_dependencies(rosidl_default_runtime)
+        message(STATUS "Generated ROS2 interface libraries: ${target}.
+            Please link them to your targets with ${target} when using
             this project ${PROJECT_NAME} externally. Or use erl_target_dependencies()
-            with LINK_MSGS option when you create targets depending on ${PROJECT_NAME}_msgs
+            with LINK_MSGS option when you create targets depending on ${target}
             within this project.")
         unset(interface_files)
+        unset(target)
+        set(${PROJECT_NAME}_HAS_ROS2_INTERFACES TRUE CACHE BOOL "TRUE if ROS2 interfaces are generated" FORCE)
     endif ()
 
     # configure ament python if setup.py exists
@@ -1500,11 +1502,19 @@ macro (erl_install)
                     DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}/config)
         endif ()
     elseif (ROS2_ACTIVATED)
-        set(deps ${${PROJECT_NAME}_ROS2_COMPONENTS} ${${PROJECT_NAME}_ERL_PACKAGES})
-        if (TARGET ${PROJECT_NAME}_ros_interfaces_LIBRARIES)
+        set(deps ${${PROJECT_NAME}_ERL_PACKAGES})
+        if (TARGET ${PROJECT_NAME}_msgs)
             list(APPEND deps rosidl_default_runtime)
         endif ()
+        foreach (component IN LISTS ${PROJECT_NAME}_ROS2_COMPONENTS)
+            # skip components that are in ${PROJECT_NAME}_MSG_DEPENDENCIES
+            list(FIND ${PROJECT_NAME}_MSG_DEPENDENCIES ${component} index)
+            if (index EQUAL -1)
+                list(APPEND deps ${component})
+            endif ()
+        endforeach ()
         if (deps)
+            list(REMOVE_DUPLICATES deps)
             message(STATUS "Exporting ament dependencies for ${PROJECT_NAME}: ${deps}")
             ament_export_dependencies(${deps})
         endif ()
@@ -1513,7 +1523,7 @@ macro (erl_install)
         if (EXISTS ${${PROJECT_NAME}_INCLUDE_DIR}/${PROJECT_NAME})
             message(STATUS "Exporting ament include directories for ${PROJECT_NAME}: "
                            "${${PROJECT_NAME}_INCLUDE_DIR}/${PROJECT_NAME}")
-            ament_export_include_directories(${${PROJECT_NAME}_INCLUDE_DIR}/${PROJECT_NAME})
+            ament_export_include_directories(include/${PROJECT_NAME})
         endif ()
         if (${PROJECT_NAME}_INSTALL_LIBRARIES)
             message(STATUS "Exporting ament targets for ${PROJECT_NAME}: ${${PROJECT_NAME}_INSTALL_LIBRARIES}")
@@ -1606,9 +1616,9 @@ macro (erl_mark_project_found)
         # CONFIG_EXTRAS will be used by ament_package(), and files are assumed in the project root dir
         if (DEFINED ${PROJECT_NAME}_CFG_EXTRAS)
             foreach (file IN LISTS ${PROJECT_NAME}_CFG_EXTRAS)
-                list(APPEND ${PROJECT_NAME}_CONFIG_EXTRAS ${CMAKE_CURRENT_LIST_DIR}/cmake/${file})
+                list(APPEND ${PROJECT_NAME}_CONFIG_EXTRAS_POST ${CMAKE_CURRENT_LIST_DIR}/cmake/${file})
             endforeach ()
-            message(STATUS "CONFIG_EXTRAS for ${PROJECT_NAME}: ${${PROJECT_NAME}_CONFIG_EXTRAS}")
+            message(STATUS "CONFIG_EXTRAS for ${PROJECT_NAME}: ${${PROJECT_NAME}_CONFIG_EXTRAS_POST}")
         endif ()
         ament_package()
     endif ()
