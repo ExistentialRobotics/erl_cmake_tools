@@ -913,8 +913,10 @@ macro (erl_setup_ros1)
         catkin
         NO_RECORD
         REQUIRED
+        #
         COMPONENTS
         ${${PROJECT_NAME}_CATKIN_COMPONENTS}
+        #
         COMMANDS
         UBUNTU_LINUX
         "try `sudo apt install ros-${ROS_DISTRO}-catkin python3-catkin-pkg python3-empy python3-nose python3-setuptools`"
@@ -948,13 +950,23 @@ macro (erl_setup_ros1)
         generate_messages(DEPENDENCIES ${${PROJECT_NAME}_MSG_DEPENDENCIES})
     endif ()
 
-    catkin_package(
-        INCLUDE_DIRS include
-        # LIBRARIES ${${PROJECT_NAME}_LIBRARIES}  <-- implicitly included by catkin
-        CATKIN_DEPENDS ${${PROJECT_NAME}_CATKIN_DEPENDS} #
-        DEPENDS ${${PROJECT_NAME}_DEPENDS} # non-catkin dependencies
-        # CFG_EXTRAS ${${PROJECT_NAME}_CFG_EXTRAS} <-- implicitly included by catkin
-    )
+    set(catkin_package_args)
+    if (EXISTS ${${PROJECT_NAME}_INCLUDE_DIR})
+        list(APPEND catkin_package_args INCLUDE_DIRS include)
+    endif ()
+    if (${PROJECT_NAME}_CATKIN_DEPENDS)
+        list(APPEND catkin_package_args CATKIN_DEPENDS ${${PROJECT_NAME}_CATKIN_DEPENDS})
+    endif ()
+    if (${PROJECT_NAME}_DEPENDS)
+        list(APPEND catkin_package_args DEPENDS ${${PROJECT_NAME}_DEPENDS})
+    endif ()
+
+    # LIBRARIES ${${PROJECT_NAME}_LIBRARIES}  <-- implicitly included by catkin
+
+    # CFG_EXTRAS ${${PROJECT_NAME}_CFG_EXTRAS} <-- implicitly included by catkin
+    message(STATUS "For ${PROJECT_NAME}, catkin_package_args: ${catkin_package_args}")
+    catkin_package(${catkin_package_args})
+    unset(catkin_package_args)
 
     # filter out Eigen3 installed at `/usr/include/eigen3` from catkin_INCLUDE_DIRS if `/usr/local/include/eigen3` is
     # also in catkin_INCLUDE_DIRS
@@ -1187,6 +1199,7 @@ macro (erl_project_setup)
     if (${PROJECT_NAME}_ENABLE_CUDA)
         erl_enable_cuda()
     endif ()
+    erl_detect_ros()
 
     foreach (erl_package ${${PROJECT_NAME}_ERL_PACKAGES})
         if (NOT ${erl_package}_FOUND)
@@ -1207,7 +1220,6 @@ macro (erl_project_setup)
     endif ()
 
     erl_setup_compiler()
-    erl_detect_ros()
     erl_setup_python()
 
     if (NOT ERL_PROJECT_SETUP_DONE OR ROS_ACTIVATED)
