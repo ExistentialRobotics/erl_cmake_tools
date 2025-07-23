@@ -210,8 +210,7 @@ macro (erl_add_tests)
             foreach (file IN LISTS GTEST_SOURCES)
                 get_filename_component(name ${file} NAME_WE)
                 add_executable(${name} ${file})
-                target_link_libraries(${name} ${${PROJECT_NAME}_TEST_LIBRARIES} GTest::Main
-                                      ${${name}_${name}_LIBRARIES} ${${name}_EXTRA_LIBRARIES})
+                target_link_libraries(${name} ${${PROJECT_NAME}_TEST_LIBRARIES} GTest::Main ${${name}_EXTRA_LIBRARIES})
 
                 if (${name} IN_LIST ${PROJECT_NAME}_TEST_EXCLUDE_FROM_ALL)
                     message(STATUS "Excluding gtest ${name}")
@@ -486,17 +485,10 @@ macro (erl_find_package)
     set(options NO_RECORD QUIET REQUIRED PKGCONFIG)
     set(oneValueArgs PACKAGE)
     set(multiValueArgs COMMANDS)
-    cmake_parse_arguments(ERL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if (NOT ERL_QUIET)
-        if (NOT DEFINED ${ERL_PACKAGE}_VERBOSE_ONCE) # avoid printing multiple times
-            set(${ERL_PACKAGE}_VERBOSE_ONCE ON CACHE BOOL "Flag of whether print detailed logs for ${ERL_PACKAGE}"
-                                                     FORCE)
-        else ()
-            set(ERL_QUIET ON)
-        endif ()
-
-        if (ERL_PACKAGE STREQUAL "Python3")
+    if (NOT ARG_QUIET)
+        if (ARG_PACKAGE STREQUAL "Python3")
             message(STATUS "To specify python interpreter, run `cmake -DPython3_ROOT_DIR=/path/to/python3_bin_folder`"
                            "With CLion, Python_EXECUTABLE is set to the selected python interpreter")
 
@@ -507,51 +499,51 @@ macro (erl_find_package)
 
         erl_platform_based_message(
             MSG_TYPE STATUS #
-            MSG_PREFIX "Finding package ${ERL_PACKAGE}, if not found" #
-            MESSAGES ${ERL_COMMANDS})
+            MSG_PREFIX "Finding package ${ARG_PACKAGE}, if not found" #
+            MESSAGES ${ARG_COMMANDS})
     endif ()
 
     set(_args)
-    if (ERL_REQUIRED)
+    if (ARG_REQUIRED)
         list(APPEND _args REQUIRED)
     endif ()
-    if (ERL_QUIET)
+    if (ARG_QUIET)
         list(APPEND _args QUIET)
     endif ()
-    list(APPEND _args ${ERL_UNPARSED_ARGUMENTS})
+    list(APPEND _args ${ARG_UNPARSED_ARGUMENTS})
 
-    if (ERL_PKGCONFIG)
+    if (ARG_PKGCONFIG)
         find_package(PkgConfig REQUIRED)
-        pkg_check_modules(${ERL_PACKAGE} ${_args})
+        pkg_check_modules(${ARG_PACKAGE} ${_args})
     else ()
-        find_package(${ERL_PACKAGE} ${_args})
+        find_package(${ARG_PACKAGE} ${_args})
     endif ()
     unset(_args)
 
-    if (${ERL_PACKAGE}_FOUND AND NOT ERL_QUIET)
+    if (${ARG_PACKAGE}_FOUND AND NOT ARG_QUIET)
         foreach (item IN ITEMS FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES LIBS DEFINITIONS)
-            if (DEFINED ${ERL_PACKAGE}_${item})
-                message(STATUS "${ERL_PACKAGE}_${item}: ${${ERL_PACKAGE}_${item}}")
+            if (DEFINED ${ARG_PACKAGE}_${item})
+                message(STATUS "${ARG_PACKAGE}_${item}: ${${ARG_PACKAGE}_${item}}")
             endif ()
         endforeach ()
     endif ()
 
-    if (ERL_NO_RECORD)
-        if (NOT ERL_QUIET)
-            message(STATUS "${ERL_PACKAGE} is not added to ${PROJECT_NAME}_DEPENDS")
+    if (ARG_NO_RECORD)
+        if (NOT ARG_QUIET)
+            message(STATUS "${ARG_PACKAGE} is not added to ${PROJECT_NAME}_DEPENDS")
         endif ()
-    elseif (${ERL_PACKAGE}_FOUND)
-        list(APPEND ${PROJECT_NAME}_DEPENDS ${ERL_PACKAGE})
+    elseif (${ARG_PACKAGE}_FOUND)
+        list(APPEND ${PROJECT_NAME}_DEPENDS ${ARG_PACKAGE})
     endif ()
 
     unset(_args)
-    unset(ERL_PKGCONFIG)
-    unset(ERL_NO_RECORD)
-    unset(ERL_QUIET)
-    unset(ERL_REQUIRED)
-    unset(ERL_PACKAGE)
-    unset(ERL_COMMANDS)
-    unset(ERL_UNPARSED_ARGUMENTS)
+    unset(ARG_PKGCONFIG)
+    unset(ARG_NO_RECORD)
+    unset(ARG_QUIET)
+    unset(ARG_REQUIRED)
+    unset(ARG_PACKAGE)
+    unset(ARG_COMMANDS)
+    unset(ARG_UNPARSED_ARGUMENTS)
 endmacro ()
 
 # ######################################################################################################################
@@ -622,7 +614,7 @@ macro (erl_set_project_paths)
     set(${PROJECT_NAME}_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Root directory of ${PROJECT_NAME}" FORCE)
     set(${PROJECT_NAME}_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE PATH "Include directory" FORCE)
     set(${PROJECT_NAME}_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Source directory" FORCE) # set to project
-                                                                                                    # root due to catkin
+    # root due to catkin
     set(${PROJECT_NAME}_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test CACHE PATH "Test directory" FORCE)
     set(${PROJECT_NAME}_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake CACHE PATH "CMake directory" FORCE)
     set(${PROJECT_NAME}_PYTHON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/python CACHE PATH "Python directory" FORCE)
@@ -799,7 +791,7 @@ macro (erl_setup_compiler)
     # -flto enables link-time optimization -ffat-lto-objects makes object files suitable for both LTO and non-LTO builds
 
     if (NOT CMAKE_OSX_DEPLOYMENT_TARGET)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET 13.0)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET 15.0)
     endif ()
 
     find_program(CCACHE_FOUND ccache)
@@ -1598,7 +1590,7 @@ macro (erl_install)
                     RUNTIME DESTINATION ${PIP_LIB_DIR})
         endif ()
 
-        foreach (TARGET IN LISTS ${PROJECT_NAME}_Targets)
+        foreach (TARGET IN LISTS ${PROJECT_NAME}_INSTALL_LIBRARIES)
             message(STATUS "Generate the rule to export ${TARGET} from ${PROJECT_NAME}")
         endforeach ()
 
@@ -1617,9 +1609,11 @@ macro (erl_install)
         # Select targets and files to install Generate and install Targets.cmake file that defines the targets offered
         # by this project ${PROJECT_NAME} target will be located in the ${PROJECT_NAME} namespace. Other CMake targets
         # can refer to it using ${PROJECT_NAME}::${PROJECT_NAME}
-        install(EXPORT ${PROJECT_NAME}_Targets #
-                FILE ${PROJECT_NAME}Targets.cmake #
-                DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKE_DIR})
+        if (${PROJECT_NAME}_INSTALL_LIBRARIES)
+            install(EXPORT ${PROJECT_NAME}_Targets #
+                    FILE ${PROJECT_NAME}Targets.cmake #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKE_DIR})
+        endif ()
 
         # reference: https://gitlab.com/libeigen/eigen/-/blob/master/CMakeLists.txt#L662 to make find_package consider
         # the directory while searching for ${PROJECT_NAME}
