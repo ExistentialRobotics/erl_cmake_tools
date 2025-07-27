@@ -1,5 +1,9 @@
 erl_cmake_tools
-============
+===============
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![ROS1](https://img.shields.io/badge/ROS1-noetic-blue)](http://wiki.ros.org/)
+[![ROS2](https://img.shields.io/badge/ROS2-humble-blue)](https://docs.ros.org/)
 
 This is a CMake module that provides some utilities for configuring C++ projects developed in ERL.
 
