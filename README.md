@@ -1,5 +1,4 @@
-erl_cmake_tools
-===============
+# erl_cmake_tools
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ROS1](https://img.shields.io/badge/ROS1-noetic-blue)](http://wiki.ros.org/)
@@ -7,14 +6,20 @@ erl_cmake_tools
 
 This is a CMake module that provides some utilities for configuring C++ projects developed in ERL.
 
-# Getting Started
+## Getting Started
 
-1. Clone this repository into your project's `src` directory
-    ```shell
-    cd src
-    git clone https://github.com/ExistentialRobotics/erl_cmake_tools.git
-    ```
-2. Include the module in your project's `CMakeLists.txt` file
+### Create Workspace
+
+```bash
+cd <your_workspace>
+mkdir -p src
+cd src
+git clone https://github.com/ExistentialRobotics/erl_cmake_tools.git
+```
+
+### As a standard CMake package or ROS package
+
+1. Include the module in your project's `CMakeLists.txt` file
     ```cmake
     add_subdirectory(src/erl_cmake_tools)
     ```
@@ -28,7 +33,7 @@ This is a CMake module that provides some utilities for configuring C++ projects
     ```xml
     <buildtool_depend>erl_cmake_tools</buildtool_depend>
     ```
-3. Then, you can use the utilities provided by `erl_cmake_tools` in other `CMakeLists.txt`.
+2. Then, you can use the utilities provided by `erl_cmake_tools` in other `CMakeLists.txt`.
    For example:
     ```cmake
     cmake_minimum_required(VERSION 3.24)
@@ -47,11 +52,39 @@ This is a CMake module that provides some utilities for configuring C++ projects
     # ...
     ```
    Full example can be found
-   in [erl_covariance](https://github.com/ExistentialRobotics/erl_covariance/blob/main/CMakeLists.txt).
+   in 🚪[erl_covariance](https://github.com/ExistentialRobotics/erl_covariance/blob/main/CMakeLists.txt).
 
-# Utilities
+3. Then build your project:
 
-## erl_project_setup
+   - As a standard CMake project:
+       ```bash
+       cd <your_workspace>
+       mkdir -p build && cd build
+       cmake .. -DCMAKE_BUILD_TYPE=Release
+       make -j$(nproc)
+       ```
+   - As a ROS package:
+       ```bash
+       cd <your_workspace>
+       source /opt/ros/<distro>/setup.bash
+       catkin build # for ROS1
+       colcon build # for ROS2
+       ```
+
+### As a Python package
+
+- Make sure you have the correct Python environment activated, `pipenv` is recommended.
+
+```bash
+cd <your_workspace>/src/erl_cmake_tools
+pip install . --verbose
+```
+
+This will install the `erl_cmake_tools` to the current Python environment. This package does not provide any Python code but cmake macros and functions that can be used by other CMake projects that depend on `erl_cmake_tools` and provide Python bindings.
+
+## Utilities
+
+### erl_project_setup
 
 This is a macro that does the following things:
 
@@ -66,7 +99,7 @@ Options:
 - `ENABLE_CUDA`: Enable CUDA support
 - `ERL_PACKAGES`: List of ERL packages to find
 
-## erl_setup_ros
+### erl_setup_ros
 
 This is a macro that supports both ROS1 and ROS2:
 
@@ -75,7 +108,7 @@ This is a macro that supports both ROS1 and ROS2:
 - Supports message generation with MSG_FILES, SRV_FILES, ACTION_FILES
 - Handles dependencies with CATKIN_COMPONENTS, CATKIN_DEPENDS, ROS2_COMPONENTS
 
-## erl_add_ros_src
+### erl_add_ros_src
 
 This is a macro that includes ROS-specific source configuration:
 
@@ -83,7 +116,7 @@ This is a macro that includes ROS-specific source configuration:
 - For ROS2: includes `src/ros2/ros.cmake` if it exists
 - Provides warnings if ROS is not activated or configuration files don't exist
 
-## erl_target_dependencies
+### erl_target_dependencies
 
 This is a function that automatically links targets with ERL package dependencies:
 
@@ -92,7 +125,7 @@ This is a function that automatically links targets with ERL package dependencie
 - Handles ROS1 catkin includes and libraries
 - Supports ROS2 message linking with `LINK_MSGS` option to link the ${PROJECT_NAME}_msgs target
 
-## erl_add_pybind_module
+### erl_add_pybind_module
 
 This is a macro that creates Python binding modules using pybind11:
 
@@ -107,7 +140,7 @@ Options:
 - `INCLUDE_DIRS`: Additional include directories
 - `LIBRARIES`: Libraries to link against
 
-## erl_add_python_package
+### erl_add_python_package
 
 This is a macro that sets up Python package build targets:
 
@@ -116,7 +149,7 @@ This is a macro that sets up Python package build targets:
 - Requires `setup.py` in project root directory
 - Supports user installation mode with `ERL_PYTHON_INSTALL_USER` option
 
-## erl_add_tests
+### erl_add_tests
 
 This is a macro that automatically detects and adds GoogleTest tests:
 
@@ -129,7 +162,7 @@ Options:
 - `LIBRARIES`: Libraries to link test executables against
 - `EXCLUDE_FROM_ALL`: Exclude tests from default build target
 
-## erl_find_package
+### erl_find_package
 
 This is a macro that finds packages with platform-specific installation suggestions:
 
@@ -155,7 +188,7 @@ erl_find_package(
     COMMANDS ARCH_LINUX "try `sudo pacman -S openmp`")
 ```
 
-## erl_find_path
+### erl_find_path
 
 This is a function to find directories containing required files with installation suggestions:
 
@@ -179,7 +212,7 @@ erl_find_path(
     COMMANDS ARCH_LINUX "try `sudo pacman -S lapacke`")
 ```
 
-## erl_install
+### erl_install
 
 This is a macro that generates comprehensive install rules:
 
@@ -203,7 +236,7 @@ erl_install(
     PYBIND_MODULES py${PROJECT_NAME})
 ```
 
-## erl_mark_project_found
+### erl_mark_project_found
 
 This is a macro that marks the current project as found and finalizes the build:
 
@@ -211,12 +244,12 @@ This is a macro that marks the current project as found and finalizes the build:
 - For ROS2: calls `ament_package()` with proper CONFIG_EXTRAS
 - Handles configuration extras for both ROS1 and ROS2
 
-## Utility Functions
+### Utility Functions
 
-### erl_detect_ros
+#### erl_detect_ros
 Detects ROS environment and sets ROS1_ACTIVATED or ROS2_ACTIVATED variables based on environment.
 
-### erl_setup_compiler
+#### erl_setup_compiler
 Sets up compiler flags including:
 - C++17 standard
 - OpenMP support
@@ -225,53 +258,53 @@ Sets up compiler flags including:
 - ccache support if available
 - Platform-specific settings
 
-### erl_enable_cuda
+#### erl_enable_cuda
 Enables CUDA language support with proper compiler settings and flags.
 
-### erl_setup_python
+#### erl_setup_python
 Sets up Python build options and configures `ERL_BUILD_PYTHON_${PROJECT_NAME}` variable.
 
-### erl_setup_test
+#### erl_setup_test
 Sets up testing options and configures `ERL_BUILD_TEST_${PROJECT_NAME}` variable.
 
-### erl_set_project_paths
+#### erl_set_project_paths
 Sets up standard project directory paths for both build and install destinations, with ROS1/ROS2 specific paths.
 
-### erl_os_release_info
+#### erl_os_release_info
 Gets OS release information including distribution name, version, and codename from system files.
 
-### erl_parse_key_value_pairs
+#### erl_parse_key_value_pairs
 Parses key-value pairs from a list and sets variables with a given prefix.
 
-### erl_platform_based_message
+#### erl_platform_based_message
 Prints messages based on the current platform (Linux distribution, macOS, etc.).
 
-### erl_suggest_cmd_for_assert
+#### erl_suggest_cmd_for_assert
 Suggests platform-specific commands when assertions fail.
 
-### erl_print_variables
+#### erl_print_variables
 Prints all CMake variables for debugging purposes.
 
-### erl_print_variable
+#### erl_print_variable
 Prints a specific CMake variable value for debugging.
 
-### erl_collect_targets
+#### erl_collect_targets
 Collects targets of a specific type for later processing.
 
-### erl_ignore_gtest
+#### erl_ignore_gtest
 Adds files to the GTest ignore list.
 
-### erl_set_gtest_args
+#### erl_set_gtest_args
 Sets custom arguments for specific GTest executables.
 
-### erl_set_gtest_extra_libraries
+#### erl_set_gtest_extra_libraries
 Sets additional libraries for specific GTest executables.
 
-### erl_set_gtest_working_directory
+#### erl_set_gtest_working_directory
 Sets working directory for specific GTest executables.
 
-### erl_append_property
+#### erl_append_property
 Appends target properties to an output variable.
 
-### erl_collect_library_dependencies
+#### erl_collect_library_dependencies
 Recursively collects library dependencies and include directories.
