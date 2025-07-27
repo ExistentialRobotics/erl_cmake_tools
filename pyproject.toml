@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools", "wheel", "toml"]
+
+[tool.black]
+line-length = 120
+
+[erl]
+description = "erl_cmake_tools"
+python_pkg_name = "erl_cmake_tools"
+pybind_module_name = "pyerl_cmake_tools"
+erl_dependencies = []
+build_type = "Release"
+version = "0.1.0"
+author = "Zhirui Dai"
+author_email = "zhdai@ucsd.edu"
+entry_points = { console_scripts = [] }
+license = "MIT"
