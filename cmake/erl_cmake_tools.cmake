@@ -195,6 +195,7 @@ macro (erl_add_tests)
                     set_target_properties(${name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
                 else ()
                     message(STATUS "Adding gtest ${name}")
+                    erl_collect_targets(EXECUTABLES ${name})
                     set(_args)
                     if (DEFINED ${name}_GTEST_WORKING_DIRECTORY)
                         list(APPEND _args "WORKING_DIRECTORY" ${${name}_GTEST_WORKING_DIRECTORY})
@@ -678,16 +679,15 @@ macro (erl_set_project_paths)
 endmacro ()
 
 macro (erl_set_project_paths_ros1)
-    set(${PROJECT_NAME}_INSTALL_BINARY_DIR ${CATKIN_GLOBAL_BIN_DESTINATION} # `bin`
-        CACHE PATH "Binary directory" FORCE)
-    set(${PROJECT_NAME}_INSTALL_RUNTIME_DIR ${CATKIN_PACKAGE_BIN_DESTINATION} CACHE PATH "Runtime directory" FORCE
-    )# usually the same as binary dir
+    set(${PROJECT_NAME}_INSTALL_BINARY_DIR ${CATKIN_PACKAGE_BIN_DESTINATION} CACHE PATH "Binary directory" FORCE)
+    set(${PROJECT_NAME}_INSTALL_RUNTIME_DIR ${CATKIN_PACKAGE_BIN_DESTINATION} CACHE PATH "Runtime directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_ETC_DIR ${CATKIN_PACKAGE_ETC_DESTINATION} CACHE PATH "etc directory" FORCE)
-    set(${PROJECT_NAME}_INSTALL_INCLUDE_DIR ${CATKIN_PACKAGE_INCLUDE_DESTINATION} CACHE PATH "Include directory" FORCE)
+    set(${PROJECT_NAME}_INSTALL_INCLUDE_DIR ${CATKIN_GLOBAL_INCLUDE_DESTINATION} CACHE PATH "Include directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_LIBRARY_DIR ${CATKIN_PACKAGE_LIB_DESTINATION} CACHE PATH "Library directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_PYTHON_DIR ${CATKIN_PACKAGE_PYTHON_DESTINATION} CACHE PATH "Python directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_SHARE_DIR ${CATKIN_PACKAGE_SHARE_DESTINATION} CACHE PATH "Share directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_CMAKE_DIR ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake CACHE PATH "CMake directory" FORCE)
+    set(${PROJECT_NAME}_RVIZ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rviz CACHE PATH "RViz directory" FORCE)
 
     if (NOT DEFINED ERL_CATKIN_INSTALL_DIR)
         set(ERL_CATKIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
@@ -728,6 +728,8 @@ macro (erl_set_project_paths_ros2)
 
     # <INSTALL_PREFIX>/share/PROJECT_NAME/cmake
     set(${PROJECT_NAME}_INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake CACHE PATH "cmake directory to install" FORCE)
+
+    set(${PROJECT_NAME}_RVIZ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rviz2 CACHE PATH "RViz directory" FORCE)
 
 endmacro ()
 
@@ -1104,15 +1106,6 @@ macro (erl_setup_ros2)
         erl_find_package(PACKAGE ament_cmake_python NO_RECORD REQUIRED #
                          COMMANDS UBUNTU_LINUX "try `sudo apt install ros-${ROS_DISTRO}-ament-cmake-python`")
     endif ()
-
-    if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/plugin_description.xml)
-        if (NOT COMMAND pluginlib_export_plugin_description_file)
-            message(FATAL_ERROR "pluginlib_export_plugin_description_file() does not exist,"
-                                "please add `pluginlib` to ROS2_COMPONENTS when calling erl_setup_ros()")
-        endif ()
-        pluginlib_export_plugin_description_file(${PROJECT_NAME} plugin_description.xml)
-    endif ()
-
 endmacro ()
 
 macro (erl_add_ros_src)
@@ -1469,8 +1462,21 @@ macro (erl_install)
 
     # Install other files
     if (${PROJECT_NAME}_INSTALL_OTHER_FILES)
-        install(FILES ${${PROJECT_NAME}_INSTALL_OTHER_FILES} #
-                DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
+        foreach (file IN LISTS ${PROJECT_NAME}_INSTALL_OTHER_FILES)
+            message(STATUS "Generate install rule for other file ${file}")
+            get_filename_component(file_dir ${file} DIRECTORY)
+            if (NOT IS_ABSOLUTE ${file})
+                set(file ${CMAKE_CURRENT_LIST_DIR}/${file})
+            endif ()
+            if (NOT EXISTS ${file})
+                message(FATAL_ERROR "File ${file} does not exist")
+            endif ()
+            if (IS_DIRECTORY ${file})
+                install(DIRECTORY ${file} DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}/${file_dir})
+            else ()
+                install(FILES ${file} DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}/${file_dir})
+            endif ()
+        endforeach ()
     endif ()
 
     # Install cmake files
@@ -1505,21 +1511,35 @@ macro (erl_install)
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
         endif ()
 
-        # Install the python package
-        if (${${PROJECT_NAME}_CATKIN_PYTHON_SETUP} AND DEFINED ${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR)
-            # install files generated from files in python/${PROJECT_NAME}
-            install(DIRECTORY ${${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR} #
-                    DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
-        endif ()
+        # # Install the python package if (${${PROJECT_NAME}_CATKIN_PYTHON_SETUP} AND DEFINED
+        # ${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR) # install files generated from files in python/${PROJECT_NAME}
+        # install(DIRECTORY ${${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR} # DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
+        # endif ()
 
         if (EXISTS ${${PROJECT_NAME}_LAUNCH_DIR})
             install(DIRECTORY ${${PROJECT_NAME}_LAUNCH_DIR} #
-                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}/launch)
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
+                    USE_SOURCE_PERMISSIONS #
+                    FILES_MATCHING PATTERN "*.launch" #
+            )
+        endif ()
+
+        if (EXISTS ${${PROJECT_NAME}_RVIZ_DIR})
+            install(DIRECTORY ${${PROJECT_NAME}_RVIZ_DIR} #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
+                    USE_SOURCE_PERMISSIONS #
+                    FILES_MATCHING PATTERN "*.rviz" #
+            )
         endif ()
 
         if (EXISTS ${${PROJECT_NAME}_CONFIG_DIR})
             install(DIRECTORY ${${PROJECT_NAME}_CONFIG_DIR} #
-                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}/config)
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
+        endif ()
+
+        if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/plugin_description.xml) # rviz plugin description file
+            install(FILES ${CMAKE_CURRENT_LIST_DIR}/plugin_description.xml #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
         endif ()
     elseif (ROS2_ACTIVATED)
         set(deps ${${PROJECT_NAME}_ERL_PACKAGES})
@@ -1576,6 +1596,37 @@ macro (erl_install)
                         RUNTIME DESTINATION ${${PROJECT_NAME}_INSTALL_PYTHON_DIR})
             endif ()
             unset(py_pkg_name)
+        endif ()
+
+        if (EXISTS ${${PROJECT_NAME}_LAUNCH_DIR})
+            install(DIRECTORY ${${PROJECT_NAME}_LAUNCH_DIR} #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
+                    USE_SOURCE_PERMISSIONS #
+                    FILES_MATCHING PATTERN "*_launch.py" #
+            )
+        endif ()
+
+        if (EXISTS ${${PROJECT_NAME}_RVIZ_DIR})
+            install(DIRECTORY ${${PROJECT_NAME}_RVIZ_DIR} #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
+                    USE_SOURCE_PERMISSIONS #
+                    FILES_MATCHING PATTERN "*.rviz" #
+            )
+        endif ()
+
+        if (EXISTS ${${PROJECT_NAME}_CONFIG_DIR})
+            install(DIRECTORY ${${PROJECT_NAME}_CONFIG_DIR} #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
+        endif ()
+
+        if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/rviz_common_plugins.xml)
+            if (NOT COMMAND pluginlib_export_plugin_description_file)
+                message(FATAL_ERROR "pluginlib_export_plugin_description_file() does not exist,"
+                                    "please add `pluginlib` to ROS2_COMPONENTS when calling erl_setup_ros()")
+            endif ()
+            install(FILES ${CMAKE_CURRENT_LIST_DIR}/rviz_common_plugins.xml #
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
+            pluginlib_export_plugin_description_file(rviz_common rviz_common_plugins.xml)
         endif ()
     else ()
         # Install the pybind module if pip install is used
