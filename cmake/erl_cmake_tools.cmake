@@ -809,9 +809,6 @@ macro (erl_setup_compiler)
     else ()
         set(CMAKE_VERBOSE_MAKEFILE ON)
     endif ()
-
-    string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
-    add_definitions(-D${PROJECT_NAME_UPPER}_ROOT_DIR="${${PROJECT_NAME}_ROOT_DIR}")
 endmacro ()
 
 # ######################################################################################################################
@@ -1139,6 +1136,9 @@ function (erl_target_dependencies target)
     endif ()
 
     cmake_parse_arguments("arg" "LINK_MSGS" "" "" ${ARGN})
+
+    string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+    target_compile_definitions(${target} PUBLIC -D${PROJECT_NAME_UPPER}_ROOT_DIR="${${PROJECT_NAME}_ROOT_DIR}")
 
     set(deps)
     foreach (package IN LISTS ${PROJECT_NAME}_ERL_PACKAGES)
@@ -1681,17 +1681,26 @@ endmacro ()
 # erl_mark_project_found
 # ######################################################################################################################
 macro (erl_mark_project_found)
-    set(${PROJECT_NAME}_FOUND TRUE CACHE BOOL "TRUE if ${PROJECT_NAME} and all required components are found" FORCE)
-    message(STATUS "${PROJECT_NAME} is found")
+
+    set(options)
+    set(oneValueArgs PROJECT_NAME)
+    set(multiValueArgs)
+    cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    if (NOT arg_PROJECT_NAME)
+        set(arg_PROJECT_NAME ${PROJECT_NAME})
+    endif ()
+
+    set(${arg_PROJECT_NAME}_FOUND TRUE CACHE BOOL "TRUE if ${arg_PROJECT_NAME} and all required components are found" FORCE)
+    message(STATUS "${arg_PROJECT_NAME} is found")
 
     if (ROS2_ACTIVATED)
         # in ROS1, CFG_EXTRAS is passed to catkin_package(), and files are assumed in the cmake dir in ROS2,
         # CONFIG_EXTRAS will be used by ament_package(), and files are assumed in the project root dir
-        if (DEFINED ${PROJECT_NAME}_CFG_EXTRAS)
-            foreach (file IN LISTS ${PROJECT_NAME}_CFG_EXTRAS)
-                list(APPEND ${PROJECT_NAME}_CONFIG_EXTRAS_POST ${CMAKE_CURRENT_LIST_DIR}/cmake/${file})
+        if (DEFINED ${arg_PROJECT_NAME}_CFG_EXTRAS)
+            foreach (file IN LISTS ${arg_PROJECT_NAME}_CFG_EXTRAS)
+                list(APPEND ${arg_PROJECT_NAME}_CONFIG_EXTRAS_POST ${CMAKE_CURRENT_LIST_DIR}/cmake/${file})
             endforeach ()
-            message(STATUS "CONFIG_EXTRAS for ${PROJECT_NAME}: ${${PROJECT_NAME}_CONFIG_EXTRAS_POST}")
+            message(STATUS "CONFIG_EXTRAS for ${arg_PROJECT_NAME}: ${${arg_PROJECT_NAME}_CONFIG_EXTRAS_POST}")
         endif ()
         ament_package()
     endif ()
