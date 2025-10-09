@@ -1,8 +1,9 @@
-macro (erl_config_opencv)
+macro(erl_config_opencv)
     erl_find_package(
-        PACKAGE OpenCV #
-        REQUIRED COMPONENTS core imgproc imgcodecs highgui videoio #
-        COMMANDS APPLE "run scripts/install_opencv.bash" #
-        COMMANDS UBUNTU_LINUX "try `sudo apt install libopencv-dev`" #
+        PACKAGE OpenCV
+        REQUIRED COMPONENTS core imgproc imgcodecs highgui videoio
+        COMMANDS APPLE "run scripts/install_opencv.bash"
+        COMMANDS UBUNTU_LINUX "try `sudo apt install libopencv-dev`"
         COMMANDS ARCH_LINUX "try `sudo pacman -S opencv`")
-endmacro ()
+    add_compile_definitions(ERL_USE_OPENCV)
+endmacro()

@@ -1,4 +1,4 @@
-macro (erl_config_qt5)
+macro(erl_config_qt5)
     set(components ${ARGN})
     if (NOT components)
         message(FATAL_ERROR "No components specified for erl_config_qt5")
@@ -6,8 +6,9 @@ macro (erl_config_qt5)
     erl_find_package(PACKAGE Qt5 COMPONENTS ${components} REQUIRED)
 
     if (ROS1_ACTIVATED)
-        # set(CMAKE_AUTOMOC ON) add_definitions(-DQT_NO_KEYWORDS) use set_target_properties(my_target PROPERTIES AUTOMOC
-        # ON) instead
+        # set(CMAKE_AUTOMOC ON)
+        # add_compile_definitions(QT_NO_KEYWORDS)
+        # set_target_properties(my_target PROPERTIES AUTOMOC ON)
         foreach (component IN LISTS components)
             erl_collect_library_dependencies(Qt5::${component} includes libs)
             list(APPEND Qt5_INCLUDE_DIRS ${includes})
@@ -21,4 +22,4 @@ macro (erl_config_qt5)
         unset(libs)
     endif ()
     unset(components)
-endmacro ()
+endmacro()

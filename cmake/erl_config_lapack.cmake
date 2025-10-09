@@ -1,4 +1,4 @@
-macro (erl_config_lapack)
+macro(erl_config_lapack)
     option(ERL_USE_LAPACK "Use LAPACK" ON)
     option(ERL_USE_LAPACK_STRICT "Use robust LAPACK algorithms only" OFF)
     option(ERL_USE_INTEL_MKL "Use Intel MKL (Math Kernel Library)" ON)
@@ -19,12 +19,12 @@ macro (erl_config_lapack)
         endif ()
 
         erl_find_path(
-            OUTPUT LAPACKE_INCLUDE_DIR #
-            PACKAGE LAPACKE #
-            REQUIRED #
-            NAMES lapacke.h #
-            PATHS /usr/include /usr/local/include /usr/local/Cellar/lapack/*/include #
-            COMMANDS UBUNTU_LINUX "try `sudo apt install liblapacke-dev`" #
+            OUTPUT LAPACKE_INCLUDE_DIR
+            PACKAGE LAPACKE
+            REQUIRED
+            NAMES lapacke.h
+            PATHS /usr/include /usr/local/include /usr/local/Cellar/lapack/*/include
+            COMMANDS UBUNTU_LINUX "try `sudo apt install liblapacke-dev`"
             COMMANDS ARCH_LINUX "try `sudo pacman -S lapacke`")
 
         if (ERL_USE_INTEL_MKL)
@@ -51,11 +51,11 @@ macro (erl_config_lapack)
 
             if (ERL_USE_LAPACK_STRICT)
                 # We don't turn on some unstable MKL routines: https://eigen.tuxfamily.org/dox/TopicUsingIntelMKL.html
-                add_definitions(-DEIGEN_USE_BLAS)
-                add_definitions(-DEIGEN_USE_LAPACKE_STRICT)
-                add_definitions(-DEIGEN_USE_MKL_VML)
+                add_compile_definitions(EIGEN_USE_BLAS)
+                add_compile_definitions(EIGEN_USE_LAPACKE_STRICT)
+                add_compile_definitions(EIGEN_USE_MKL_VML)
             else ()
-                add_definitions(-DEIGEN_USE_MKL_ALL)
+                add_compile_definitions(EIGEN_USE_MKL_ALL)
             endif ()
 
             if (ERL_USE_SINGLE_THREADED_BLAS)
@@ -73,13 +73,13 @@ macro (erl_config_lapack)
                 if (NOT DEFINED MKL_ROOT)
                     unset(MKL_INCLUDE_DIRS CACHE)
                     erl_find_path(
-                        OUTPUT MKL_INCLUDE_DIRS #
-                        PACKAGE MKL #
-                        mkl.h #
+                        OUTPUT MKL_INCLUDE_DIRS
+                        PACKAGE MKL
+                        mkl.h
                         PATHS /usr/include /usr/include/mkl /usr/local/include /usr/local/include/mkl
-                        /opt/intel/oneapi/mkl/*/include #
-                        REQUIRED #
-                        COMMANDS ARCH_LINUX "try `sudo pacman -S intel-oneapi-basekit`" #
+                        /opt/intel/oneapi/mkl/*/include
+                        REQUIRED
+                        COMMANDS ARCH_LINUX "try `sudo pacman -S intel-oneapi-basekit`"
                         COMMANDS GENERAL "visit ${_base_toolkit_url}")
                     get_filename_component(MKL_ROOT ${MKL_INCLUDE_DIRS} DIRECTORY)
                     get_filename_component(MKL_ROOT ${MKL_ROOT} REALPATH)
@@ -163,8 +163,8 @@ macro (erl_config_lapack)
             unset(IOMP_ROOT)
         elseif (ERL_USE_AOCL)
             message(STATUS "Use AMD Optimizing CPU Library")
-            add_definitions(-DEIGEN_USE_BLAS)
-            add_definitions(-DEIGEN_ERL_USE_LAPACKE)
+            add_compile_definitions(EIGEN_USE_BLAS)
+            add_compile_definitions(EIGEN_ERL_USE_LAPACKE)
             set(BLA_VENDOR AOCL)
             erl_find_path(
                 OUTPUT AOCL_LIB_DIR #
@@ -187,8 +187,8 @@ macro (erl_config_lapack)
             set(LAPACK_LIBRARIES ${AOCL_ROOT}/lib/libflame.so)
         else ()
             message(STATUS "Use OpenBLAS")
-            add_definitions(-DEIGEN_USE_BLAS)
-            add_definitions(-DEIGEN_ERL_USE_LAPACKE)
+            add_compile_definitions(EIGEN_USE_BLAS)
+            add_compile_definitions(EIGEN_ERL_USE_LAPACKE)
             set(BLA_VENDOR OpenBLAS)
 
             if (ERL_USE_SINGLE_THREADED_BLAS)
@@ -216,4 +216,4 @@ macro (erl_config_lapack)
         unset(BLAS_LIBRARIES)
         unset(LAPACK_LIBRARIES)
     endif ()
-endmacro ()
+endmacro()

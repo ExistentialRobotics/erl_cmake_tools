@@ -224,15 +224,15 @@ if (NOT TARGET MKL::MKL)
 
     # Determine Compiler Family
     if (CXX_COMPILER_NAME STREQUAL "dpcpp" OR CXX_COMPILER_NAME STREQUAL "dpcpp.exe"
-            OR CXX_COMPILER_NAME STREQUAL "icpx" OR CXX_COMPILER_NAME STREQUAL "icx.exe"
-            OR CXX_COMPILER_NAME STREQUAL "mpiicpx" OR CXX_COMPILER_NAME STREQUAL "mpiicx.bat")
+        OR CXX_COMPILER_NAME STREQUAL "icpx" OR CXX_COMPILER_NAME STREQUAL "icx.exe"
+        OR CXX_COMPILER_NAME STREQUAL "mpiicpx" OR CXX_COMPILER_NAME STREQUAL "mpiicx.bat")
         set(SYCL_COMPILER ON)
     endif ()
     if (C_COMPILER_NAME MATCHES "^clang" OR CXX_COMPILER_NAME MATCHES "^clang")
         set(CLANG_COMPILER ON)
     endif ()
     if (CMAKE_C_COMPILER_ID STREQUAL "Intel" OR CMAKE_CXX_COMPILER_ID STREQUAL "Intel" OR CMAKE_Fortran_COMPILER_ID STREQUAL "Intel"
-            OR CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_Fortran_COMPILER_ID STREQUAL "IntelLLVM")
+        OR CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_Fortran_COMPILER_ID STREQUAL "IntelLLVM")
         set(INTEL_COMPILER ON)
     else ()
         if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -245,8 +245,8 @@ if (NOT TARGET MKL::MKL)
     # CMake identifies IntelLLVM compilers only after 3.20
     if (NOT INTEL_COMPILER)
         if (C_COMPILER_NAME STREQUAL "icx" OR C_COMPILER_NAME STREQUAL "icx.exe"
-                OR CXX_COMPILER_NAME STREQUAL "icpx" OR CXX_COMPILER_NAME STREQUAL "icx.exe"
-                OR Fortran_COMPILER_NAME STREQUAL "ifx" OR Fortran_COMPILER_NAME STREQUAL "ifx.exe")
+            OR CXX_COMPILER_NAME STREQUAL "icpx" OR CXX_COMPILER_NAME STREQUAL "icx.exe"
+            OR Fortran_COMPILER_NAME STREQUAL "ifx" OR Fortran_COMPILER_NAME STREQUAL "ifx.exe")
             set(INTEL_COMPILER ON)
         endif ()
     endif ()
@@ -306,9 +306,9 @@ if (NOT TARGET MKL::MKL)
             set(MKL_ROOT $ENV{MKLROOT})
             # Verify that the version in MKL_ROOT is the same as MKL_VERSION
             find_file(MKL_VERSION_H mkl_version.h
-                    HINTS ${MKL_ROOT}
-                    PATH_SUFFIXES include mkl
-                    NO_DEFAULT_PATH)
+                      HINTS ${MKL_ROOT}
+                      PATH_SUFFIXES include mkl
+                      NO_DEFAULT_PATH)
             check_required_vars(MKL_VERSION_H)
             file(READ ${MKL_VERSION_H} MKL_VERSION_H_CONTENT)
             string(REGEX MATCH "__INTEL_MKL__ +([0-9]+)" MKL_VERSION_INFO ${MKL_VERSION_H_CONTENT})
@@ -332,9 +332,9 @@ if (NOT TARGET MKL::MKL)
     check_required_vars(MKL_ROOT)
     if (NOT DEFINED ${CMAKE_FIND_PACKAGE_NAME}_VERSION)
         find_file(MKL_VERSION_H mkl_version.h
-                HINTS ${MKL_ROOT}
-                PATH_SUFFIXES include mkl
-                NO_DEFAULT_PATH)
+                  HINTS ${MKL_ROOT}
+                  PATH_SUFFIXES include mkl
+                  NO_DEFAULT_PATH)
         check_required_vars(MKL_VERSION_H)
         file(READ ${MKL_VERSION_H} MKL_VERSION_H_CONTENT)
         string(REGEX MATCH "__INTEL_MKL__ +([0-9]+)" MKL_VERSION_INFO ${MKL_VERSION_H_CONTENT})
@@ -414,9 +414,9 @@ if (NOT TARGET MKL::MKL)
 
     # Define oneMKL headers
     find_path(MKL_INCLUDE mkl.h
-            HINTS ${MKL_ROOT}
-            PATH_SUFFIXES mkl include
-            NO_DEFAULT_PATH)
+              HINTS ${MKL_ROOT}
+              PATH_SUFFIXES mkl include
+              NO_DEFAULT_PATH)
     check_required_vars(MKL_INCLUDE)
 
     # Add pre-built F95 Interface Modules
@@ -711,10 +711,10 @@ if (NOT TARGET MKL::MKL)
         list(APPEND MKL_SYCL_LIBRARIES ${MKL_SYCL} ${MKL_SYCL_IFACE_LIB} ${MKL_SYCL_THREAD} ${MKL_CORE})
         list(TRANSFORM MKL_SYCL PREPEND MKL:: OUTPUT_VARIABLE MKL_SYCL_T)
         list(APPEND MKL_SYCL_LINK_LINE ${MKL_SYCL_LOPT} ${SYCL_EXPORT_DYNAMIC} ${NO_AS_NEEDED} ${MKL_SYCL_RPATH}
-                ${MKL_SYCL_T} ${START_GROUP} MKL::${MKL_SYCL_IFACE_LIB} MKL::${MKL_SYCL_THREAD} MKL::${MKL_CORE} ${END_GROUP})
+             ${MKL_SYCL_T} ${START_GROUP} MKL::${MKL_SYCL_IFACE_LIB} MKL::${MKL_SYCL_THREAD} MKL::${MKL_CORE} ${END_GROUP})
     endif ()
     list(APPEND MKL_LINK_LINE $<IF:$<BOOL:${ENABLE_OMP_OFFLOAD}>,${MKL_OFFLOAD_LOPT},>
-            ${EXPORT_DYNAMIC} ${NO_AS_NEEDED} ${MKL_RPATH})
+         ${EXPORT_DYNAMIC} ${NO_AS_NEEDED} ${MKL_RPATH})
     if (ENABLE_BLAS95)
         list(APPEND MKL_LIBRARIES ${MKL_BLAS95})
         list(APPEND MKL_LINK_LINE MKL::${MKL_BLAS95})
@@ -769,18 +769,18 @@ if (NOT TARGET MKL::MKL)
         unset(${lib}_file CACHE)
         if (MKL_LINK STREQUAL "static" AND NOT ${lib} STREQUAL ${MKL_SDL})
             find_library(${lib}_file ${LIB_PREFIX}${lib}${LIB_EXT}
-                    PATHS ${MKL_ROOT}
-                    PATH_SUFFIXES "lib" "../lib" "lib/x86_64-linux-gnu" "../lib/x86_64-linux-gnu"
-                    NO_DEFAULT_PATH)
+                         PATHS ${MKL_ROOT}
+                         PATH_SUFFIXES "lib" "../lib" "lib/x86_64-linux-gnu" "../lib/x86_64-linux-gnu"
+                         NO_DEFAULT_PATH)
             add_library(MKL::${lib} STATIC IMPORTED)
         else ()
             find_library(${lib}_file NAMES ${LIB_PREFIX}${lib}${DLL_EXT}
-                    ${LIB_PREFIX}${lib}${DLL_EXT}.${SO_VER}
-                    ${LIB_PREFIX}${lib}${DLL_EXT}.${SYCL_SO_VER}
-                    ${lib}
-                    PATHS ${MKL_ROOT}
-                    PATH_SUFFIXES "lib" "../lib" "lib/x86_64-linux-gnu" "../lib/x86_64-linux-gnu"
-                    NO_DEFAULT_PATH)
+                         ${LIB_PREFIX}${lib}${DLL_EXT}.${SO_VER}
+                         ${LIB_PREFIX}${lib}${DLL_EXT}.${SYCL_SO_VER}
+                         ${lib}
+                         PATHS ${MKL_ROOT}
+                         PATH_SUFFIXES "lib" "../lib" "lib/x86_64-linux-gnu" "../lib/x86_64-linux-gnu"
+                         NO_DEFAULT_PATH)
             add_library(MKL::${lib} SHARED IMPORTED)
         endif ()
         if (NOT MKL_LINK STREQUAL "static" AND ${lib} MATCHES "mkl_sycl" AND ${${lib}_file} STREQUAL "${lib}_file-NOTFOUND")
@@ -794,7 +794,7 @@ if (NOT TARGET MKL::MKL)
             mkl_message(WARNING "Could NOT find MKL ${lib} for target MKL::MKL_SYCL::${MKL_SYCL_DOMAIN}")
         else ()
             if (NOT USE_MPI AND (${lib} MATCHES "mkl_scalapack" OR ${lib} MATCHES "mkl_blacs" OR ${lib} MATCHES "mkl_cdft")
-                    AND ${${lib}_file} STREQUAL "${lib}_file-NOTFOUND")
+                AND ${${lib}_file} STREQUAL "${lib}_file-NOTFOUND")
                 if (${lib} MATCHES "mkl_scalapack")
                     mkl_message(STATUS "Could NOT find MKL ${lib} for target MKL::MKL_SCALAPACK")
                 endif ()
@@ -818,12 +818,12 @@ if (NOT TARGET MKL::MKL)
             # Find corresponding DLL
             set(MKL_DLL_GLOB ${lib}.*.dll)
             file(GLOB MKL_DLL_FILE "${MKL_ROOT}/bin/${MKL_DLL_GLOB}"
-                    # Legacy oneAPI layout support below
-                    "${MKL_ROOT}/redist/${MKL_ARCH}/${MKL_DLL_GLOB}"
-                    "${MKL_ROOT}/../redist/${MKL_ARCH}/${MKL_DLL_GLOB}"
-                    "${MKL_ROOT}/../redist/${MKL_ARCH}/mkl/${MKL_DLL_GLOB}"
-                    # Support for Conda directory layout
-                    "${MKL_ROOT}/bin/${MKL_DLL_GLOB}"
+                 # Legacy oneAPI layout support below
+                 "${MKL_ROOT}/redist/${MKL_ARCH}/${MKL_DLL_GLOB}"
+                 "${MKL_ROOT}/../redist/${MKL_ARCH}/${MKL_DLL_GLOB}"
+                 "${MKL_ROOT}/../redist/${MKL_ARCH}/mkl/${MKL_DLL_GLOB}"
+                 # Support for Conda directory layout
+                 "${MKL_ROOT}/bin/${MKL_DLL_GLOB}"
             )
             if (NOT ${lib} STREQUAL ${MKL_IFACE_LIB} AND NOT ${lib} STREQUAL ${MKL_BLAS95} AND NOT ${lib} STREQUAL ${MKL_LAPACK95})  # Windows IFACE libs are static only
                 list(LENGTH MKL_DLL_FILE MKL_DLL_FILE_LEN)
@@ -918,37 +918,37 @@ if (NOT TARGET MKL::MKL)
             set(OMP_LIBNAME ${LIB_PREFIX}${MKL_OMP_LIB}${LIB_EXT})
 
             find_library(OMP_LIBRARY ${OMP_LIBNAME}
-                    HINTS $ENV{LIB} ${ENV_LIBRARY_PATH} $ENV{MKLROOT} ${MKL_ROOT} $ENV{CMPLR_ROOT}
-                    "/usr/lib/x86_64-linux-gnu" "/usr/lib"
-                    PATH_SUFFIXES "lib" "lib/${MKL_ARCH}"
-                    "lib/${MKL_ARCH}_lin" "lib/${MKL_ARCH}_win"
-                    "linux/compiler/lib/${MKL_ARCH}"
-                    "linux/compiler/lib/${MKL_ARCH}_lin"
-                    "windows/compiler/lib/${MKL_ARCH}"
-                    "windows/compiler/lib/${MKL_ARCH}_win"
-                    "../compiler/lib/${MKL_ARCH}_lin" "../compiler/lib/${MKL_ARCH}_win"
-                    "../compiler/lib/${MKL_ARCH}" "../compiler/lib" "compiler/lib"
-                    "../../compiler/latest/lib"
-                    "../../compiler/latest/linux/compiler/lib/${MKL_ARCH}"
-                    "../../compiler/latest/linux/compiler/lib/${MKL_ARCH}_lin"
-                    "../../compiler/latest/windows/compiler/lib/${MKL_ARCH}"
-                    "../../compiler/latest/windows/compiler/lib/${MKL_ARCH}_win"
-                    NO_DEFAULT_PATH)
+                         HINTS $ENV{LIB} ${ENV_LIBRARY_PATH} $ENV{MKLROOT} ${MKL_ROOT} $ENV{CMPLR_ROOT}
+                         "/usr/lib/x86_64-linux-gnu" "/usr/lib"
+                         PATH_SUFFIXES "lib" "lib/${MKL_ARCH}"
+                         "lib/${MKL_ARCH}_lin" "lib/${MKL_ARCH}_win"
+                         "linux/compiler/lib/${MKL_ARCH}"
+                         "linux/compiler/lib/${MKL_ARCH}_lin"
+                         "windows/compiler/lib/${MKL_ARCH}"
+                         "windows/compiler/lib/${MKL_ARCH}_win"
+                         "../compiler/lib/${MKL_ARCH}_lin" "../compiler/lib/${MKL_ARCH}_win"
+                         "../compiler/lib/${MKL_ARCH}" "../compiler/lib" "compiler/lib"
+                         "../../compiler/latest/lib"
+                         "../../compiler/latest/linux/compiler/lib/${MKL_ARCH}"
+                         "../../compiler/latest/linux/compiler/lib/${MKL_ARCH}_lin"
+                         "../../compiler/latest/windows/compiler/lib/${MKL_ARCH}"
+                         "../../compiler/latest/windows/compiler/lib/${MKL_ARCH}_win"
+                         NO_DEFAULT_PATH)
             if (WIN32)
                 set(OMP_DLLNAME ${LIB_PREFIX}${MKL_OMP_LIB}.dll)
                 find_path(OMP_DLL_DIR ${OMP_DLLNAME}
-                        HINTS $ENV{LIB} ${ENV_LIBRARY_PATH} $ENV{MKLROOT} ${MKL_ROOT} $ENV{CMPLR_ROOT}
-                        PATH_SUFFIXES "bin"
-                        # Legacy layout support for oneMKL
-                        "redist/${MKL_ARCH}"
-                        "redist/${MKL_ARCH}_win" "redist/${MKL_ARCH}_win/compiler"
-                        "../redist/${MKL_ARCH}/compiler" "../compiler/lib"
-                        "../../compiler/latest/bin"
-                        "../../compiler/latest/windows/redist/${MKL_ARCH}_win"
-                        "../../compiler/latest/windows/redist/${MKL_ARCH}_win/compiler"
-                        "../../compiler/latest/windows/compiler/redist/${MKL_ARCH}_win"
-                        "../../compiler/latest/windows/compiler/redist/${MKL_ARCH}_win/compiler"
-                        NO_DEFAULT_PATH)
+                          HINTS $ENV{LIB} ${ENV_LIBRARY_PATH} $ENV{MKLROOT} ${MKL_ROOT} $ENV{CMPLR_ROOT}
+                          PATH_SUFFIXES "bin"
+                          # Legacy layout support for oneMKL
+                          "redist/${MKL_ARCH}"
+                          "redist/${MKL_ARCH}_win" "redist/${MKL_ARCH}_win/compiler"
+                          "../redist/${MKL_ARCH}/compiler" "../compiler/lib"
+                          "../../compiler/latest/bin"
+                          "../../compiler/latest/windows/redist/${MKL_ARCH}_win"
+                          "../../compiler/latest/windows/redist/${MKL_ARCH}_win/compiler"
+                          "../../compiler/latest/windows/compiler/redist/${MKL_ARCH}_win"
+                          "../../compiler/latest/windows/compiler/redist/${MKL_ARCH}_win/compiler"
+                          NO_DEFAULT_PATH)
                 if (MKL_LINK STREQUAL "sdl" AND NOT OMP_DLL_DIR)
                     mkl_message(WARNING "${OMP_DLLNAME} not found. MKL_ENV will not contain paths for ${OMP_DLLNAME}.")
                 else ()
@@ -1050,10 +1050,10 @@ if (NOT TARGET MKL::MKL)
         add_library(MKL::MKL INTERFACE IMPORTED GLOBAL)
     endif ()
     target_compile_options(MKL::MKL INTERFACE
-            $<$<COMPILE_LANGUAGE:C>:${MKL_C_COPT}>
-            $<$<COMPILE_LANGUAGE:Fortran>:${MKL_F_COPT}>
-            $<$<COMPILE_LANGUAGE:CXX>:${MKL_CXX_COPT}>
-            $<IF:$<BOOL:${ENABLE_OMP_OFFLOAD}>,${MKL_OFFLOAD_COPT},>)
+                           $<$<COMPILE_LANGUAGE:C>:${MKL_C_COPT}>
+                           $<$<COMPILE_LANGUAGE:Fortran>:${MKL_F_COPT}>
+                           $<$<COMPILE_LANGUAGE:CXX>:${MKL_CXX_COPT}>
+                           $<IF:$<BOOL:${ENABLE_OMP_OFFLOAD}>,${MKL_OFFLOAD_COPT},>)
     target_link_libraries(MKL::MKL INTERFACE ${MKL_LINK_LINE} ${MKL_THREAD_LIB} ${MKL_SUPP_LINK})
     list(APPEND LINK_TYPES MKL::MKL)
 
@@ -1072,7 +1072,7 @@ if (NOT TARGET MKL::MKL)
         endif ()
     endif ()
     if (NOT ${${MKL_CDFT}_file} STREQUAL "${MKL_CDFT}_file-NOTFOUND"
-            AND NOT ${${MKL_BLACS}_file} STREQUAL "${MKL_BLACS}_file-NOTFOUND")
+        AND NOT ${${MKL_BLACS}_file} STREQUAL "${MKL_BLACS}_file-NOTFOUND")
         if (NOT TARGET MKL::MKL_CDFT)
             add_library(MKL::MKL_CDFT INTERFACE IMPORTED GLOBAL)
         endif ()
@@ -1086,7 +1086,7 @@ if (NOT TARGET MKL::MKL)
         endif ()
     endif ()
     if (NOT ${${MKL_SCALAPACK}_file} STREQUAL "${MKL_SCALAPACK}_file-NOTFOUND"
-            AND NOT ${${MKL_BLACS}_file} STREQUAL "${MKL_BLACS}_file-NOTFOUND")
+        AND NOT ${${MKL_BLACS}_file} STREQUAL "${MKL_BLACS}_file-NOTFOUND")
         if (NOT TARGET MKL::MKL_SCALAPACK)
             add_library(MKL::MKL_SCALAPACK INTERFACE IMPORTED GLOBAL)
         endif ()

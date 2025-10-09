@@ -61,7 +61,7 @@ if (epoxy_FOUND AND NOT TARGET epoxy::epoxy)
     add_library(epoxy::epoxy UNKNOWN IMPORTED)
     set_target_properties(
         epoxy::epoxy PROPERTIES IMPORTED_LOCATION "${epoxy_LIBRARIES}" INTERFACE_COMPILE_OPTIONS "${epoxy_DEFINITIONS}"
-                                INTERFACE_INCLUDE_DIRECTORIES "${epoxy_INCLUDE_DIRS}")
+        INTERFACE_INCLUDE_DIRECTORIES "${epoxy_INCLUDE_DIRS}")
 endif ()
 
 mark_as_advanced(epoxy_DEFINITIONS epoxy_HAS_GLX epoxy_INCLUDE_DIRS epoxy_LIBRARIES epoxy_VERSION)

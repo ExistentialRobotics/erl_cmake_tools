@@ -1,4 +1,4 @@
-macro (erl_config_tracy)
+macro(erl_config_tracy)
     option(ERL_USE_TRACY "Use Tracy Profiler" OFF)
     option(ERL_TRACY_PROFILE_MEMORY "Profile memory usage" OFF)
     if (ERL_USE_TRACY)
@@ -17,10 +17,10 @@ macro (erl_config_tracy)
         target_compile_options(TracyServer PRIVATE -w) # disable warnings for Tracy
         target_compile_options(tracy-profiler PRIVATE -w) # disable warnings for Tracy
         erl_find_package(
-            PACKAGE TBB REQUIRED #
-            COMMANDS UBUNTU_LINUX "try `sudo apt install libtbb-dev`" #
+            PACKAGE TBB REQUIRED
+            COMMANDS UBUNTU_LINUX "try `sudo apt install libtbb-dev`"
             COMMANDS ARCH_LINUX "try `sudo pacman -S onetbb`")
         target_link_libraries(tracy-profiler PRIVATE TBB::tbb)
         link_libraries(Tracy::TracyClient) # link Tracy to all targets
     endif ()
-endmacro ()
+endmacro()

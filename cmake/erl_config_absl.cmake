@@ -1,9 +1,9 @@
-macro (erl_config_absl)
+macro(erl_config_absl)
     erl_find_package(
-        PACKAGE absl #
-        REQUIRED #
-        COMMANDS APPLE "try `brew install abseil`" #
-        COMMANDS UBUNTU_LINUX "try `sudo apt install libabseil-dev`" #
+        PACKAGE absl
+        REQUIRED
+        COMMANDS APPLE "try `brew install abseil`"
+        COMMANDS UBUNTU_LINUX "try `sudo apt install libabseil-dev`"
         COMMANDS ARCH_LINUX "try `sudo pacman -S abseil-cpp`")
     if (ROS1_ACTIVATED)
         erl_collect_library_dependencies(absl::flat_hash_map absl_INCLUDE_DIRS absl_LIBRARIES)
@@ -15,4 +15,5 @@ macro (erl_config_absl)
         unset(includes)
         unset(libs)
     endif ()
-endmacro ()
+    add_compile_definitions(ERL_USE_ABSL)
+endmacro()

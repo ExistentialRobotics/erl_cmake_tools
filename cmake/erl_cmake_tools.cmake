@@ -16,18 +16,18 @@ endforeach ()
 # ######################################################################################################################
 # erl_append_property
 # ######################################################################################################################
-function (erl_append_property target_name property_name output_var)
+function(erl_append_property target_name property_name output_var)
     get_target_property(_property ${target_name} ${property_name})
     if (_property)
         list(APPEND ${output_var} ${_property})
         set(${output_var} ${${output_var}} PARENT_SCOPE)
     endif ()
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_collect_library_dependencies
 # ######################################################################################################################
-function (erl_collect_library_dependencies target_name includes_out libs_out)
+function(erl_collect_library_dependencies target_name includes_out libs_out)
 
     set(queue ${target_name})
     set(visited "")
@@ -52,17 +52,28 @@ function (erl_collect_library_dependencies target_name includes_out libs_out)
                 erl_append_property(${current} INTERFACE_LINK_LIBRARIES${_cfg} _local_libs)
                 erl_append_property(${current} LOCATION${_cfg} _local_libs)
             endif ()
-            # check includes
-            erl_append_property(${current} INCLUDE_DIRECTORIES _includes)
-            erl_append_property(${current} INTERFACE_INCLUDE_DIRECTORIES _includes)
-            erl_append_property(${current} INTERFACE_SYSTEM_INCLUDE_DIRECTORIES _includes)
-            # check libraries
-            erl_append_property(${current} IMPORTED_LINK_DEPENDENT_LIBRARIES _local_libs)
-            erl_append_property(${current} IMPORTED_LINK_INTERFACE_LIBRARIES _local_libs)
-            erl_append_property(${current} IMPORTED_LOCATION _local_libs)
-            erl_append_property(${current} INTERFACE_LINK_LIBRARIES _local_libs)
-            erl_append_property(${current} LINK_LIBRARIES _local_libs)
-            erl_append_property(${current} LOCATION _local_libs)
+            get_target_property(_lib_type ${current} TYPE)
+            get_target_property(_is_imported ${current} IMPORTED)
+            message(STATUS "Collecting dependencies for ${_lib_type} ${_is_imported} target ${current}")
+
+            if ("${_lib_type}" STREQUAL "INTERFACE_LIBRARY")
+                erl_append_property(${current} INTERFACE_INCLUDE_DIRECTORIES _includes)
+                erl_append_property(${current} INTERFACE_SYSTEM_INCLUDE_DIRECTORIES _includes)
+                erl_append_property(${current} INTERFACE_LINK_LIBRARIES _local_libs)
+            else ()
+                erl_append_property(${current} INTERFACE_INCLUDE_DIRECTORIES _includes)
+                erl_append_property(${current} INTERFACE_SYSTEM_INCLUDE_DIRECTORIES _includes)
+                erl_append_property(${current} INTERFACE_LINK_LIBRARIES _local_libs)
+                erl_append_property(${current} INCLUDE_DIRECTORIES _includes)
+                erl_append_property(${current} LINK_LIBRARIES _local_libs)
+                erl_append_property(${current} LOCATION _local_libs)
+            endif ()
+
+            if (_is_imported)
+                # erl_append_property(${current} IMPORTED_LINK_DEPENDENT_LIBRARIES _local_libs)
+                erl_append_property(${current} IMPORTED_LINK_INTERFACE_LIBRARIES _local_libs)
+                erl_append_property(${current} IMPORTED_LOCATION _local_libs)
+            endif ()
 
             foreach (_lib IN LISTS _local_libs)
                 if (TARGET ${_lib})
@@ -78,55 +89,55 @@ function (erl_collect_library_dependencies target_name includes_out libs_out)
 
     set(${includes_out} ${_includes} PARENT_SCOPE)
     set(${libs_out} ${_libs} PARENT_SCOPE)
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_set_gtest_args
 # ######################################################################################################################
-macro (erl_set_gtest_args)
+macro(erl_set_gtest_args)
     set(_gtest_name ${ARGV0})
     set(_gtest_args ${ARGN})
     list(POP_FRONT _gtest_args) # get the remaining arguments
     set(${_gtest_name}_GTEST_ARGS ${_gtest_args} CACHE STRING "GTest arguments for ${_gtest_args}" FORCE)
     message(STATUS "GTest arguments for ${_gtest_name}: ${${_gtest_name}_GTEST_ARGS}")
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_set_gtest_extra_libraries
 # ######################################################################################################################
-macro (erl_set_gtest_extra_libraries _gtest_name)
+macro(erl_set_gtest_extra_libraries _gtest_name)
     set(_gtest_libraries ${ARGN})
     set(${_gtest_name}_EXTRA_LIBRARIES ${_gtest_libraries} CACHE STRING "GTest extra libraries for ${_gtest_libraries}"
-                                                                 FORCE)
+        FORCE)
     message(STATUS "Extra libraries for GTest ${_gtest_name}: ${${_gtest_name}_EXTRA_LIBRARIES}")
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_set_gtest_working_directory
 # ######################################################################################################################
-macro (erl_set_gtest_working_directory _gtest_name _gtest_working_directory)
+macro(erl_set_gtest_working_directory _gtest_name _gtest_working_directory)
     set(${_gtest_name}_GTEST_WORKING_DIRECTORY ${_gtest_working_directory}
         CACHE STRING "GTest working directory for ${_gtest_name}" FORCE)
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_collect_targets
 # ######################################################################################################################
-macro (erl_collect_targets type)
+macro(erl_collect_targets type)
     list(APPEND ${PROJECT_NAME}_COLLECTED_${type} ${ARGN})
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_ignore_gtest
 # ######################################################################################################################
-macro (erl_ignore_gtest)
+macro(erl_ignore_gtest)
     list(APPEND ${PROJECT_NAME}_GTEST_IGNORE_FILES ${ARGN})
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_add_tests
 # ######################################################################################################################
-macro (erl_add_tests)
+macro(erl_add_tests)
     message(STATUS ">> ${PROJECT_NAME}: erl_add_tests")
 
     set(options)
@@ -236,7 +247,7 @@ macro (erl_add_tests)
 
         # TODO: add python tests
     endif ()
-endmacro ()
+endmacro()
 
 # cmake-format: off
 # ##################################################################################################
@@ -293,7 +304,7 @@ endmacro ()
 # DISTRIB_ID=Ubuntu      DISTRIB_RELEASE=17.10
 # ##################################################################################################
 # cmake-format: on
-function (erl_os_release_info _vn_id _vn_version_id _vn_codename)
+function(erl_os_release_info _vn_id _vn_version_id _vn_codename)
     set(_var_id "")
     set(_var_version_id "")
     set(_var_codename "")
@@ -311,8 +322,6 @@ function (erl_os_release_info _vn_id _vn_version_id _vn_codename)
 
             # Extract start and end, discard optional "version" or "release"
             string(REGEX MATCH "^([A-Za-z0-9_]+)( +(version|release))? +(.*)$" _dummy "${file_line}")
-
-            # 1              2  3                    4
             set(_var_id "${CMAKE_MATCH_1}")
             set(_var_version_id "${CMAKE_MATCH_4}")
         endif ()
@@ -384,12 +393,12 @@ function (erl_os_release_info _vn_id _vn_version_id _vn_codename)
     if (NOT "${_vn_codename}" STREQUAL "")
         set(${_vn_codename} "${_var_codename}" PARENT_SCOPE)
     endif ()
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_parse_key_value_pairs
 # ######################################################################################################################
-function (erl_parse_key_value_pairs _pairs prefix)
+function(erl_parse_key_value_pairs _pairs prefix)
     # _pairs is read-only and string based, so we need to unpack it into a local variable.
     set(pairs ${${_pairs}})
     list(LENGTH pairs len)
@@ -407,12 +416,12 @@ function (erl_parse_key_value_pairs _pairs prefix)
         list(GET pairs ${value_index} value)
         set(${prefix}_${key} ${value} PARENT_SCOPE)
     endforeach ()
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_platform_based_message
 # ######################################################################################################################
-function (erl_platform_based_message)
+function(erl_platform_based_message)
     set(options)
     set(oneValueArgs MSG_TYPE MSG_PREFIX)
     set(multiValueArgs MESSAGES)
@@ -438,12 +447,12 @@ function (erl_platform_based_message)
     endif ()
 
     message(${ERL_MSG_TYPE} "${ERL_MSG_PREFIX}: ${ERL_MESSAGES_${ERL_PLATFORM}}")
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_suggest_cmd_for_assert
 # ######################################################################################################################
-function (erl_suggest_cmd_for_assert)
+function(erl_suggest_cmd_for_assert)
     set(options)
     set(oneValueArgs ASSERT MSG MSG_TYPE)
     set(multiValueArgs COMMANDS)
@@ -475,12 +484,12 @@ function (erl_suggest_cmd_for_assert)
                 MESSAGES ${ERL_COMMANDS})
         endif ()
     endif ()
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_find_package
 # ######################################################################################################################
-macro (erl_find_package)
+macro(erl_find_package)
     message(STATUS ">> ${PROJECT_NAME}: erl_find_package")
 
     set(options NO_RECORD QUIET REQUIRED PKGCONFIG)
@@ -491,7 +500,7 @@ macro (erl_find_package)
     if (NOT ARG_QUIET)
         if (ARG_PACKAGE STREQUAL "Python3")
             message(STATUS "To specify python interpreter, run `cmake -DPython3_ROOT_DIR=/path/to/python3_bin_folder`"
-                           "With CLion, Python_EXECUTABLE is set to the selected python interpreter")
+                    "With CLion, Python_EXECUTABLE is set to the selected python interpreter")
 
             if (DEFINED Python_EXECUTABLE)
                 get_filename_component(Python3_ROOT_DIR ${Python_EXECUTABLE} DIRECTORY)
@@ -545,12 +554,12 @@ macro (erl_find_package)
     unset(ARG_PACKAGE)
     unset(ARG_COMMANDS)
     unset(ARG_UNPARSED_ARGUMENTS)
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_find_path
 # ######################################################################################################################
-function (erl_find_path)
+function(erl_find_path)
     set(options)
     set(oneValueArgs OUTPUT PACKAGE)
     set(multiValueArgs COMMANDS)
@@ -576,12 +585,12 @@ function (erl_find_path)
     get_filename_component(${ERL_OUTPUT} ${${ERL_OUTPUT}} REALPATH)
     message(STATUS "${ERL_OUTPUT}: ${${ERL_OUTPUT}}")
     set(${ERL_OUTPUT} ${${ERL_OUTPUT}} PARENT_SCOPE)
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_detect_ros
 # ######################################################################################################################
-macro (erl_detect_ros)
+macro(erl_detect_ros)
     message(STATUS ">> ${PROJECT_NAME}: erl_detect_ros")
 
     if (DEFINED ENV{ROS_VERSION})
@@ -596,21 +605,21 @@ macro (erl_detect_ros)
 
     if (ROS_VERSION STREQUAL "1")
         message(STATUS "ROS_VERSION: ${ROS_VERSION}")
-        add_definitions(-DERL_ROS_VERSION_1)
+        add_compile_definitions(ERL_ROS_VERSION_1)
         set(ROS1_ACTIVATED ON)
     elseif (ROS_VERSION STREQUAL "2")
         message(STATUS "ROS_VERSION: ${ROS_VERSION}")
-        add_definitions(-DERL_ROS_VERSION_2)
+        add_compile_definitions(ERL_ROS_VERSION_2)
         set(ROS2_ACTIVATED ON)
     else ()
         message(STATUS "No ROS detected")
     endif ()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_set_project_paths
 # ######################################################################################################################
-macro (erl_set_project_paths)
+macro(erl_set_project_paths)
     # set project paths
     set(${PROJECT_NAME}_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Root directory of ${PROJECT_NAME}" FORCE)
     set(${PROJECT_NAME}_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE PATH "Include directory" FORCE)
@@ -676,9 +685,9 @@ macro (erl_set_project_paths)
         set(${PROJECT_NAME}_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
             CACHE PATH "Path to cmake directory during installation" FORCE)
     endif ()
-endmacro ()
+endmacro()
 
-macro (erl_set_project_paths_ros1)
+macro(erl_set_project_paths_ros1)
     set(${PROJECT_NAME}_INSTALL_BINARY_DIR ${CATKIN_PACKAGE_BIN_DESTINATION} CACHE PATH "Binary directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_RUNTIME_DIR ${CATKIN_PACKAGE_BIN_DESTINATION} CACHE PATH "Runtime directory" FORCE)
     set(${PROJECT_NAME}_INSTALL_ETC_DIR ${CATKIN_PACKAGE_ETC_DESTINATION} CACHE PATH "etc directory" FORCE)
@@ -699,9 +708,9 @@ macro (erl_set_project_paths_ros1)
         set(ERL_CATKIN_DEVEL_LIB_DIR ${ERL_CATKIN_DEVEL_DIR}/lib)
         set(ERL_CATKIN_DEVEL_PYTHON_DIR ${ERL_CATKIN_DEVEL_DIR}/${CATKIN_GLOBAL_PYTHON_DESTINATION})
     endif ()
-endmacro ()
+endmacro()
 
-macro (erl_set_project_paths_ros2)
+macro(erl_set_project_paths_ros2)
 
     # <INSTALL_PREFIX>/lib/PROJECT_NAME, ROS2 does not install to bin, instead to lib/PROJECT_NAME
     set(${PROJECT_NAME}_INSTALL_BINARY_DIR lib/${PROJECT_NAME} CACHE PATH "binary directory to install" FORCE)
@@ -731,31 +740,31 @@ macro (erl_set_project_paths_ros2)
 
     set(${PROJECT_NAME}_RVIZ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rviz2 CACHE PATH "RViz directory" FORCE)
 
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_print_variables
 # ######################################################################################################################
-function (erl_print_variables)
+function(erl_print_variables)
     get_cmake_property(VARIABLE_NAMES VARIABLES)
     list(SORT VARIABLE_NAMES)
 
     foreach (VARIABLE_NAME ${VARIABLE_NAMES})
         message(STATUS "${VARIABLE_NAME}=${${VARIABLE_NAME}}")
     endforeach ()
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_print_variable
 # ######################################################################################################################
-function (erl_print_variable VARIABLE_NAME)
+function(erl_print_variable VARIABLE_NAME)
     message(STATUS "${VARIABLE_NAME}=${${VARIABLE_NAME}}")
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_setup_compiler
 # ######################################################################################################################
-macro (erl_setup_compiler)
+macro(erl_setup_compiler)
     option(ERL_IGNORE_CONDA_LIBRARIES "Ignore conda libraries" ON)
     option(ERL_PRINT_HEADER_DEPENDENCIES "Print header dependencies" OFF)
 
@@ -779,7 +788,7 @@ macro (erl_setup_compiler)
     if (ERL_PRINT_HEADER_DEPENDENCIES)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -H")
     endif ()
-
+    set(CMAKE_CXX_VISIBILITY_PRESET "default")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fopenmp -Wall -Wextra -Wno-unknown-pragmas")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--disable-new-dtags") # pass arguments to the linker
     # disable new DTAGS (DT_RUNPATH) since it is not supported in Ubuntu old DTAGS (DT_RPATH) is used to specify paths
@@ -805,28 +814,29 @@ macro (erl_setup_compiler)
     endif ()
 
     if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-        add_definitions(-DNDEBUG)
+        add_compile_definitions(NDEBUG)
     else ()
         set(CMAKE_VERBOSE_MAKEFILE ON)
     endif ()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_enable_cuda
 # ######################################################################################################################
-macro (erl_enable_cuda)
+macro(erl_enable_cuda)
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER} CACHE STRING "Host compiler for CUDA" FORCE)
     enable_language(CUDA)
+    set(CMAKE_CUDA_VISIBILITY_PRESET "default")
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_FLAGS_RELEASE "-O3")
     set(CMAKE_CUDA_FLAGS_DEBUG "-G")
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_setup_python
 # ######################################################################################################################
-macro (erl_setup_python)
+macro(erl_setup_python)
     option(ERL_BUILD_PYTHON "Build Python binding" ON)
     if (NOT DEFINED ERL_BUILD_PYTHON_${PROJECT_NAME})
         set(ERL_BUILD_PYTHON_${PROJECT_NAME} ${ERL_BUILD_PYTHON})
@@ -835,12 +845,12 @@ macro (erl_setup_python)
     if (NOT ERL_BUILD_PYTHON)
         set(ERL_BUILD_PYTHON_${PROJECT_NAME} OFF)
     endif ()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_setup_test
 # ######################################################################################################################
-macro (erl_setup_test)
+macro(erl_setup_test)
     message(STATUS ">> ${PROJECT_NAME}: erl_setup_test")
 
     if (NOT DEFINED BUILD_TESTING)
@@ -849,7 +859,7 @@ macro (erl_setup_test)
     option(ERL_BUILD_TEST "Build executables for test" ${BUILD_TESTING})
 
     if (ERL_BUILD_TEST)
-        add_definitions(-DERL_BUILD_TEST)
+        add_compile_definitions(ERL_BUILD_TEST)
         enable_testing()
 
         if (ROS1_ACTIVATED)
@@ -874,18 +884,18 @@ macro (erl_setup_test)
     if (NOT DEFINED ERL_BUILD_TEST_${PROJECT_NAME})
         set(ERL_BUILD_TEST_${PROJECT_NAME} ${ERL_BUILD_TEST})
     endif ()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_setup_ros
 # ######################################################################################################################
-macro (erl_setup_ros)
+macro(erl_setup_ros)
     message(STATUS ">> ${PROJECT_NAME}: erl_setup_ros")
 
     set(options)
     set(oneValueArgs)
     set(multiValueArgs MSG_DEPENDENCIES MSG_FILES SRV_FILES ACTION_FILES CATKIN_COMPONENTS CATKIN_DEPENDS LIBRARIES
-                       CFG_EXTRAS ROS2_COMPONENTS)
+        CFG_EXTRAS ROS2_COMPONENTS)
     cmake_parse_arguments(${PROJECT_NAME} "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if (DEFINED ${PROJECT_NAME}_UNPARSED_ARGUMENTS)
@@ -900,12 +910,12 @@ macro (erl_setup_ros)
         erl_setup_ros2()
     endif ()
 
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_setup_ros1
 # ######################################################################################################################
-macro (erl_setup_ros1)
+macro(erl_setup_ros1)
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/package.xml)
         message(FATAL_ERROR "No package.xml found in ${CMAKE_CURRENT_LIST_DIR}")
     endif ()
@@ -975,8 +985,8 @@ macro (erl_setup_ros1)
     catkin_package(${catkin_package_args})
     unset(catkin_package_args)
 
-    # filter out Eigen3 installed at `/usr/include/eigen3` from catkin_INCLUDE_DIRS if `/usr/local/include/eigen3` is
-    # also in catkin_INCLUDE_DIRS
+    # filter out Eigen3 installed at `/usr/include/eigen3` from catkin_INCLUDE_DIRS
+    # if `/usr/local/include/eigen3` is also in catkin_INCLUDE_DIRS
     set(EIGEN3_AT_USR_INCLUDE_EIGEN3 FALSE)
     set(EIGEN3_AT_USR_LOCAL_INCLUDE_EIGEN3 FALSE)
     foreach (inc ${catkin_INCLUDE_DIRS})
@@ -1024,12 +1034,12 @@ macro (erl_setup_ros1)
     set(CATKIN_INSTALL_PYTHON_DIR ${CATKIN_INSTALL_DIR}/${CATKIN_GLOBAL_PYTHON_DESTINATION})
 
     erl_set_project_paths_ros1()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_setup_ros2
 # ######################################################################################################################
-macro (erl_setup_ros2)
+macro(erl_setup_ros2)
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/package.xml)
         message(FATAL_ERROR "No package.xml found in ${CMAKE_CURRENT_LIST_DIR}")
     endif ()
@@ -1103,9 +1113,9 @@ macro (erl_setup_ros2)
         erl_find_package(PACKAGE ament_cmake_python NO_RECORD REQUIRED #
                          COMMANDS UBUNTU_LINUX "try `sudo apt install ros-${ROS_DISTRO}-ament-cmake-python`")
     endif ()
-endmacro ()
+endmacro()
 
-macro (erl_add_ros_src)
+macro(erl_add_ros_src)
     if (ROS1_ACTIVATED)
         set(file "${CMAKE_CURRENT_LIST_DIR}/src/ros1/ros.cmake")
         if (EXISTS ${file})
@@ -1123,12 +1133,12 @@ macro (erl_add_ros_src)
     else ()
         message(WARNING "erl_add_ros_src(): ROS is not activated, no ROS source files are added")
     endif ()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_target_dependencies
 # ######################################################################################################################
-function (erl_target_dependencies target)
+function(erl_target_dependencies target)
     message(STATUS ">> ${PROJECT_NAME}: erl_target_dependencies")
 
     if (NOT TARGET ${target})
@@ -1138,7 +1148,7 @@ function (erl_target_dependencies target)
     cmake_parse_arguments("arg" "LINK_MSGS" "" "" ${ARGN})
 
     string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
-    target_compile_definitions(${target} PUBLIC -D${PROJECT_NAME_UPPER}_ROOT_DIR="${${PROJECT_NAME}_ROOT_DIR}")
+    target_compile_definitions(${target} PUBLIC ${PROJECT_NAME_UPPER}_ROOT_DIR="${${PROJECT_NAME}_ROOT_DIR}")
 
     set(deps)
     foreach (package IN LISTS ${PROJECT_NAME}_ERL_PACKAGES)
@@ -1173,19 +1183,19 @@ function (erl_target_dependencies target)
         if (arg_LINK_MSGS)
             if (NOT TARGET ${PROJECT_NAME}_msgs)
                 message(FATAL_ERROR "Target ${PROJECT_NAME}_msgs does not exist. Make sure erl_setup_ros() is called"
-                                    "with MSG_FILES/SRV_FILES/ACTION_FILES before erl_target_dependencies()")
+                        "with MSG_FILES/SRV_FILES/ACTION_FILES before erl_target_dependencies()")
             endif ()
             message(STATUS "Linking ${PROJECT_NAME}_msgs to ${target}")
             rosidl_get_typesupport_target(${PROJECT_NAME}_msgs_LIBRARIES ${PROJECT_NAME}_msgs "rosidl_typesupport_cpp")
             target_link_libraries(${target} PUBLIC ${${PROJECT_NAME}_msgs_LIBRARIES})
         endif ()
     endif ()
-endfunction ()
+endfunction()
 
 # ######################################################################################################################
 # erl_project_setup
 # ######################################################################################################################
-macro (erl_project_setup)
+macro(erl_project_setup)
     message(STATUS ">> ${PROJECT_NAME}: erl_project_setup")
 
     set(options ENABLE_CUDA)
@@ -1235,9 +1245,9 @@ macro (erl_project_setup)
 
     erl_set_project_paths()
     erl_setup_test()
-endmacro ()
+endmacro()
 
-macro (erl_add_pybind_module)
+macro(erl_add_pybind_module)
     message(STATUS ">> ${PROJECT_NAME}: erl_add_pybind_module")
 
     # cmake-format: off
@@ -1252,10 +1262,18 @@ macro (erl_add_pybind_module)
     set(multiValueArgs INCLUDE_DIRS LIBRARIES)
     cmake_parse_arguments("arg" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    if (arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unparsed arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif ()
+
     if (ERL_BUILD_PYTHON_${PROJECT_NAME})
         message(STATUS "Adding Python binding module ${arg_PYBIND_MODULE_NAME} for ${PROJECT_NAME}")
         erl_config_python3()
         erl_config_pybind11()
+
+        if (NOT DEFINED arg_PYBIND_SRC_DIR)
+            set(arg_PYBIND_SRC_DIR ${${PROJECT_NAME}_PYTHON_BINDING_DIR})
+        endif ()
 
         file(GLOB_RECURSE SRC_FILES "${arg_PYBIND_SRC_DIR}/*.cpp")
         if (NOT SRC_FILES)
@@ -1268,9 +1286,9 @@ macro (erl_add_pybind_module)
 
         # pybind runtime lib
         get_target_property(lib_type pybind11::module TYPE)
-        if (NOT lib_type STREQUAL "INTERFACE_LIBRARY") # check if it is an interface library
+        if(NOT lib_type STREQUAL "INTERFACE_LIBRARY") # check if it is an interface library
             set_target_properties(pybind11::module PROPERTIES SYSTEM ON)
-        endif ()
+        endif()
         pybind11_add_module(${arg_PYBIND_MODULE_NAME} ${SRC_FILES})
 
         # cmake-format: off
@@ -1299,9 +1317,9 @@ macro (erl_add_pybind_module)
         set_target_properties(
             ${arg_PYBIND_MODULE_NAME}
             PROPERTIES SKIP_BUILD_RPATH FALSE # Use separate rpaths during build and install phases
-                       BUILD_WITH_INSTALL_RPATH FALSE # Don't use the install-rpath during the build phase
-                       INSTALL_RPATH "${_rpath}" # search in the same directory, or in lib/<project_name>
-                       INSTALL_RPATH_USE_LINK_PATH TRUE)
+            BUILD_WITH_INSTALL_RPATH FALSE # Don't use the install-rpath during the build phase
+            INSTALL_RPATH "${_rpath}" # search in the same directory, or in lib/<project_name>
+            INSTALL_RPATH_USE_LINK_PATH TRUE)
         target_compile_definitions(${arg_PYBIND_MODULE_NAME} PRIVATE PYBIND_MODULE_NAME=${arg_PYBIND_MODULE_NAME})
         target_include_directories(${arg_PYBIND_MODULE_NAME} SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
         if (DEFINED arg_INCLUDE_DIRS)
@@ -1326,7 +1344,7 @@ macro (erl_add_pybind_module)
                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${arg_PYBIND_MODULE_NAME}> ${DEVEL_LIB_PATH}
                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${arg_PYBIND_MODULE_NAME}> ${INSTALL_LIB_PATH}
                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${arg_PYBIND_MODULE_NAME}>
-                        ${${PROJECT_NAME}_PYTHON_DIR}/${PROJECT_NAME}) # copy to source directory for devel
+                ${${PROJECT_NAME}_PYTHON_DIR}/${PROJECT_NAME}) # copy to source directory for devel
         endif ()
     endif ()
 
@@ -1334,12 +1352,12 @@ macro (erl_add_pybind_module)
     unset(arg_PYBIND_SRC_DIR)
     unset(arg_INCLUDE_DIRS)
     unset(arg_LIBRARIES)
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_add_python_package
 # ######################################################################################################################
-macro (erl_add_python_package)
+macro(erl_add_python_package)
     message(STATUS ">> ${PROJECT_NAME}: erl_add_python_package")
 
     if (ERL_BUILD_PYTHON_${PROJECT_NAME})
@@ -1359,8 +1377,8 @@ macro (erl_add_python_package)
         if (NOT ${${PROJECT_NAME}_PY_PACKAGE_NAME} STREQUAL ${PROJECT_NAME})
             message(
                 FATAL_ERROR
-                    "Python package name ${${PROJECT_NAME}_PY_PACKAGE_NAME} does not match project name ${PROJECT_NAME}."
-                    "Please rename the package directory to ${PROJECT_NAME}.")
+                "Python package name ${${PROJECT_NAME}_PY_PACKAGE_NAME} does not match project name ${PROJECT_NAME}."
+                "Please rename the package directory to ${PROJECT_NAME}.")
         endif ()
 
         message(STATUS "BUILD_PYTHON_PKG_DIR: ${${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR}")
@@ -1396,7 +1414,7 @@ macro (erl_add_python_package)
                 add_custom_target(
                     ${PROJECT_NAME}_py_stub #
                     COMMAND ${stubgen_path} -o ${CMAKE_CURRENT_BINARY_DIR}/python/stubs -p
-                            ${PROJECT_NAME}.${${PROJECT_NAME}_PYBIND_MODULE_NAME} --verbose
+                    ${PROJECT_NAME}.${${PROJECT_NAME}_PYBIND_MODULE_NAME} --verbose
                     DEPENDS ${PROJECT_NAME}_py_install WORKING_DIRECTORY ${${PROJECT_NAME}_ROOT_DIR}
                     COMMENT "Generating stub files for Python package ${PROJECT_NAME}")
             endif ()
@@ -1404,15 +1422,45 @@ macro (erl_add_python_package)
             unset(erl_pip_install_args)
         else ()
             message(WARNING "setup.py not found in ${${PROJECT_NAME}_ROOT_DIR},"
-                            "rules for Python package ${PROJECT_NAME} is not generated.")
+                    "rules for Python package ${PROJECT_NAME} is not generated.")
         endif ()
     endif ()
-endmacro ()
+endmacro()
+
+# ######################################################################################################################
+# erl_dump_compile_definitions
+# ######################################################################################################################
+macro(erl_dump_compile_definitions output_file)
+    get_directory_property(definitions DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
+    if (definitions)
+        set(header_content "#pragma once\n\n// This file is auto-generated by erl_dump_compile_definitions()\n\n")
+        message(STATUS "Wrote compile definitions to ${output_file}:")
+        foreach (definition ${definitions})
+            if (definition STREQUAL "NDEBUG")
+                continue() # NDEBUG is handled by CMAKE_BUILD_TYPE
+            endif ()
+            if (definition MATCHES "ROS(.*)")
+                continue()
+            endif ()
+            message(STATUS "  ${definition}")
+            if (definition MATCHES "^([^=]+)=(.*)$")
+                string(APPEND header_content "#ifndef ${CMAKE_MATCH_1}\n")
+                string(APPEND header_content "    #define ${CMAKE_MATCH_1} ${CMAKE_MATCH_2}\n")
+                string(APPEND header_content "#endif\n\n")
+            else ()
+                string(APPEND header_content "#ifndef ${definition}\n")
+                string(APPEND header_content "    #define ${definition}\n")
+                string(APPEND header_content "#endif\n\n")
+            endif ()
+        endforeach ()
+        file(WRITE ${output_file} "${header_content}")
+    endif ()
+endmacro()
 
 # ######################################################################################################################
 # erl_install
 # ######################################################################################################################
-macro (erl_install)
+macro(erl_install)
     message(STATUS ">> ${PROJECT_NAME}: erl_install")
 
     set(options)
@@ -1511,11 +1559,6 @@ macro (erl_install)
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
         endif ()
 
-        # # Install the python package if (${${PROJECT_NAME}_CATKIN_PYTHON_SETUP} AND DEFINED
-        # ${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR) # install files generated from files in python/${PROJECT_NAME}
-        # install(DIRECTORY ${${PROJECT_NAME}_BUILD_PYTHON_PKG_DIR} # DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
-        # endif ()
-
         if (EXISTS ${${PROJECT_NAME}_LAUNCH_DIR})
             install(DIRECTORY ${${PROJECT_NAME}_LAUNCH_DIR} #
                     DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
@@ -1562,7 +1605,7 @@ macro (erl_install)
         # Export old-style CMake variables
         if (EXISTS ${${PROJECT_NAME}_INCLUDE_DIR}/${PROJECT_NAME})
             message(STATUS "Exporting ament include directories for ${PROJECT_NAME}: "
-                           "${${PROJECT_NAME}_INCLUDE_DIR}/${PROJECT_NAME}")
+                    "${${PROJECT_NAME}_INCLUDE_DIR}/${PROJECT_NAME}")
             ament_export_include_directories(include/${PROJECT_NAME})
         endif ()
         if (${PROJECT_NAME}_INSTALL_LIBRARIES)
@@ -1622,7 +1665,7 @@ macro (erl_install)
         if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/rviz_common_plugins.xml)
             if (NOT COMMAND pluginlib_export_plugin_description_file)
                 message(FATAL_ERROR "pluginlib_export_plugin_description_file() does not exist,"
-                                    "please add `pluginlib` to ROS2_COMPONENTS when calling erl_setup_ros()")
+                        "please add `pluginlib` to ROS2_COMPONENTS when calling erl_setup_ros()")
             endif ()
             install(FILES ${CMAKE_CURRENT_LIST_DIR}/rviz_common_plugins.xml #
                     DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
@@ -1672,25 +1715,26 @@ macro (erl_install)
 
         # Install the build configuration and information about version compatibility
         install(FILES "${${PROJECT_NAME}_BUILD_DIR}/${PROJECT_NAME}Config.cmake"
-                      "${${PROJECT_NAME}_BUILD_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+                "${${PROJECT_NAME}_BUILD_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
                 DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKE_DIR})
     endif ()
-endmacro ()
+endmacro()
 
 # ######################################################################################################################
 # erl_mark_project_found
 # ######################################################################################################################
-macro (erl_mark_project_found)
+macro(erl_mark_project_found)
 
     set(options)
     set(oneValueArgs PROJECT_NAME)
     set(multiValueArgs)
     cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
     if (NOT arg_PROJECT_NAME)
         set(arg_PROJECT_NAME ${PROJECT_NAME})
     endif ()
 
-    set(${arg_PROJECT_NAME}_FOUND TRUE CACHE BOOL "TRUE if ${arg_PROJECT_NAME} and all required components are found" FORCE)
+    set(${arg_PROJECT_NAME}_FOUND TRUE CACHE BOOL "TRUE if ${arg_PROJECT_NAME} is found" FORCE)
     message(STATUS "${arg_PROJECT_NAME} is found")
 
     if (ROS2_ACTIVATED)
@@ -1704,4 +1748,4 @@ macro (erl_mark_project_found)
         endif ()
         ament_package()
     endif ()
-endmacro ()
+endmacro()

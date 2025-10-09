@@ -1,4 +1,4 @@
-macro (erl_config_qt)
+macro(erl_config_qt)
     set(components ${ARGN})
     if (NOT components)
         message(FATAL_ERROR "No components specified for erl_config_qt")
@@ -18,4 +18,4 @@ macro (erl_config_qt)
     message(STATUS "QT_LIBRARIES: ${QT_LIBRARIES}")
     unset(components)
 
-endmacro ()
+endmacro()
