@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(
     erl_cmake_tools
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION
         "erl_cmake_tools is a collection of CMake helper functions and macros for Existential Robotics Library (ERL) packages."
 )
