@@ -1286,9 +1286,9 @@ macro(erl_add_pybind_module)
 
         # pybind runtime lib
         get_target_property(lib_type pybind11::module TYPE)
-        if(NOT lib_type STREQUAL "INTERFACE_LIBRARY") # check if it is an interface library
+        if (NOT lib_type STREQUAL "INTERFACE_LIBRARY") # check if it is an interface library
             set_target_properties(pybind11::module PROPERTIES SYSTEM ON)
-        endif()
+        endif ()
         pybind11_add_module(${arg_PYBIND_MODULE_NAME} ${SRC_FILES})
 
         # cmake-format: off
@@ -1453,7 +1453,14 @@ macro(erl_dump_compile_definitions output_file)
                 string(APPEND header_content "#endif\n\n")
             endif ()
         endforeach ()
-        file(WRITE ${output_file} "${header_content}")
+        if (EXISTS ${output_file})
+            file(READ ${output_file} existing_content)
+            if (NOT existing_content STREQUAL header_content)
+                file(WRITE ${output_file} "${header_content}")
+            endif ()
+        else ()
+            file(WRITE ${output_file} "${header_content}")
+        endif ()
     endif ()
 endmacro()
 
