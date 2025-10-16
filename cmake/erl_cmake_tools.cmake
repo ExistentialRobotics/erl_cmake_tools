@@ -796,7 +796,7 @@ macro(erl_setup_compiler)
     # libraries that are transitively linked to the executable
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ftrack-macro-expansion=2")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -funroll-loops -g")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects")
     # -flto enables link-time optimization -ffat-lto-objects makes object files suitable for both LTO and non-LTO builds
@@ -811,6 +811,15 @@ macro(erl_setup_compiler)
         set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
     else ()
         message(STATUS "ccache is not found")
+    endif ()
+
+    # cmake must be Debug, Release, RelWithDebInfo, or MinSizeRel
+    if (NOT DEFINED CMAKE_CONFIGURATION_TYPES) # not defined
+        set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
+    endif ()
+    if (NOT CMAKE_BUILD_TYPE IN_LIST CMAKE_CONFIGURATION_TYPES)
+        message(FATAL_ERROR "CMAKE_BUILD_TYPE must be one of ${CMAKE_CONFIGURATION_TYPES}. But got: "
+                "${CMAKE_BUILD_TYPE}")
     endif ()
 
     if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -1204,7 +1213,7 @@ macro(erl_project_setup)
     cmake_parse_arguments(${PROJECT_NAME} "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if (${PROJECT_NAME}_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Some arguments are not recognized by erl_project_setup")
+        message(FATAL_ERROR "Some arguments are not recognized by erl_project_setup: ${${PROJECT_NAME}_UNPARSED_ARGUMENTS}")
     endif ()
 
     if (${PROJECT_NAME}_ENABLE_CUDA)
@@ -1575,10 +1584,10 @@ macro(erl_install)
         endif ()
 
         if (EXISTS ${${PROJECT_NAME}_RVIZ_DIR})
-            install(DIRECTORY ${${PROJECT_NAME}_RVIZ_DIR} #
-                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
-                    USE_SOURCE_PERMISSIONS #
-                    FILES_MATCHING PATTERN "*.rviz" #
+            install(DIRECTORY ${${PROJECT_NAME}_RVIZ_DIR}
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}
+                    USE_SOURCE_PERMISSIONS
+                    FILES_MATCHING PATTERN "*.rviz"
             )
         endif ()
 
@@ -1630,10 +1639,13 @@ macro(erl_install)
             # rosidl_generator_py/cmake/rosidl_generator_py_generate_interfaces.cmake, which uses ${PROJECT_NAME} as the
             # package name. ament_cmake_python_copy_${PROJECT_NAME} and ament_cmake_python_build_${PROJECT_NAME}_egg are
             # created, which cannot be created twice.
+            message(STATUS "To install Python ROS2 nodes, specify them as console_scripts in setup.cfg")
             ament_python_install_package(
-                ${PROJECT_NAME} #
-                PACKAGE_DIR ${${PROJECT_NAME}_PYTHON_PKG_DIR} #
-                DESTINATION ${ROS2_PYTHON_SITE_PACKAGES_DIR})
+                ${PROJECT_NAME}
+                PACKAGE_DIR ${${PROJECT_NAME}_PYTHON_PKG_DIR}
+                DESTINATION ${ROS2_PYTHON_SITE_PACKAGES_DIR}
+                SCRIPTS_DESTINATION ${${PROJECT_NAME}_INSTALL_BINARY_DIR}
+                )
             # Install the pybind module
             if (${PROJECT_NAME}_INSTALL_PYBIND_MODULES)
                 foreach (module ${${PROJECT_NAME}_INSTALL_PYBIND_MODULES})
@@ -1649,10 +1661,10 @@ macro(erl_install)
         endif ()
 
         if (EXISTS ${${PROJECT_NAME}_LAUNCH_DIR})
-            install(DIRECTORY ${${PROJECT_NAME}_LAUNCH_DIR} #
-                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
-                    USE_SOURCE_PERMISSIONS #
-                    FILES_MATCHING PATTERN "*_launch.py" #
+            install(DIRECTORY ${${PROJECT_NAME}_LAUNCH_DIR}
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}
+                    USE_SOURCE_PERMISSIONS
+                    FILES_MATCHING PATTERN "*launch.py"
             )
         endif ()
 
@@ -1674,7 +1686,7 @@ macro(erl_install)
                 message(FATAL_ERROR "pluginlib_export_plugin_description_file() does not exist,"
                         "please add `pluginlib` to ROS2_COMPONENTS when calling erl_setup_ros()")
             endif ()
-            install(FILES ${CMAKE_CURRENT_LIST_DIR}/rviz_common_plugins.xml #
+            install(FILES ${CMAKE_CURRENT_LIST_DIR}/rviz_common_plugins.xml
                     DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
             pluginlib_export_plugin_description_file(rviz_common rviz_common_plugins.xml)
         endif ()
@@ -1685,9 +1697,9 @@ macro(erl_install)
                 message(STATUS "Generate install rule for pybind module ${module}")
             endforeach ()
 
-            install(TARGETS ${${PROJECT_NAME}_INSTALL_PYBIND_MODULES} #
-                    ARCHIVE DESTINATION ${PIP_LIB_DIR} #
-                    LIBRARY DESTINATION ${PIP_LIB_DIR} #
+            install(TARGETS ${${PROJECT_NAME}_INSTALL_PYBIND_MODULES}
+                    ARCHIVE DESTINATION ${PIP_LIB_DIR}
+                    LIBRARY DESTINATION ${PIP_LIB_DIR}
                     RUNTIME DESTINATION ${PIP_LIB_DIR})
         endif ()
 
@@ -1702,6 +1714,7 @@ macro(erl_install)
             COMPATIBILITY SameMajorVersion)
 
         # Generate the configuration file which CMake uses for using an installed package
+        set(ERL_PACKAGES "${${PROJECT_NAME}_ERL_PACKAGES}")
         configure_package_config_file(
             "${${PROJECT_NAME}_CMAKE_DIR}/${PROJECT_NAME}Config.cmake.in"
             "${${PROJECT_NAME}_BUILD_DIR}/${PROJECT_NAME}Config.cmake"
@@ -1711,8 +1724,8 @@ macro(erl_install)
         # by this project ${PROJECT_NAME} target will be located in the ${PROJECT_NAME} namespace. Other CMake targets
         # can refer to it using ${PROJECT_NAME}::${PROJECT_NAME}
         if (${PROJECT_NAME}_INSTALL_LIBRARIES)
-            install(EXPORT ${PROJECT_NAME}_Targets #
-                    FILE ${PROJECT_NAME}Targets.cmake #
+            install(EXPORT ${PROJECT_NAME}_Targets
+                    FILE ${PROJECT_NAME}Targets.cmake
                     DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKE_DIR})
         endif ()
 
