@@ -795,10 +795,10 @@ macro(erl_setup_compiler)
     # for libraries that are directly linked to the executable new DTAGS (DT_RUNPATH) is used to specify paths for
     # libraries that are transitively linked to the executable
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ftrack-macro-expansion=2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=2")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -funroll-loops -g")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects -ffast-math")
     # -flto enables link-time optimization -ffat-lto-objects makes object files suitable for both LTO and non-LTO builds
 
     if (NOT CMAKE_OSX_DEPLOYMENT_TARGET)
