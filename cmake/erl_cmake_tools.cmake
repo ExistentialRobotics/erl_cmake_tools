@@ -798,7 +798,7 @@ macro(erl_setup_compiler)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=2")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -funroll-loops -g")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects -ffast-math")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects")
     # -flto enables link-time optimization -ffat-lto-objects makes object files suitable for both LTO and non-LTO builds
 
     if (NOT CMAKE_OSX_DEPLOYMENT_TARGET)
