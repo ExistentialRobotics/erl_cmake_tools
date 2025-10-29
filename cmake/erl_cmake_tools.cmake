@@ -796,7 +796,7 @@ macro(erl_setup_compiler)
     # libraries that are transitively linked to the executable
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=2")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -funroll-loops -g")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects")
     # -flto enables link-time optimization -ffat-lto-objects makes object files suitable for both LTO and non-LTO builds
@@ -1645,7 +1645,7 @@ macro(erl_install)
                 PACKAGE_DIR ${${PROJECT_NAME}_PYTHON_PKG_DIR}
                 DESTINATION ${ROS2_PYTHON_SITE_PACKAGES_DIR}
                 SCRIPTS_DESTINATION ${${PROJECT_NAME}_INSTALL_BINARY_DIR}
-                )
+            )
             # Install the pybind module
             if (${PROJECT_NAME}_INSTALL_PYBIND_MODULES)
                 foreach (module ${${PROJECT_NAME}_INSTALL_PYBIND_MODULES})
