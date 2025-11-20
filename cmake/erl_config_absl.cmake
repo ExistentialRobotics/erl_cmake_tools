@@ -2,7 +2,7 @@ macro(erl_config_absl)
     erl_find_package(
         PACKAGE absl
         REQUIRED
-        COMMANDS APPLE "try `brew install abseil`"
+        COMMANDS DARWIN "try `brew install abseil`"
         COMMANDS UBUNTU_LINUX "try `sudo apt install libabseil-dev`"
         COMMANDS ARCH_LINUX "try `sudo pacman -S abseil-cpp`")
     if (ROS1_ACTIVATED)

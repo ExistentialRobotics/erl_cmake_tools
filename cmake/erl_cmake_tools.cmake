@@ -789,13 +789,23 @@ macro(erl_setup_compiler)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -H")
     endif ()
     set(CMAKE_CXX_VISIBILITY_PRESET "default")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fopenmp -Wall -Wextra -Wno-unknown-pragmas")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--disable-new-dtags") # pass arguments to the linker
-    # disable new DTAGS (DT_RUNPATH) since it is not supported in Ubuntu old DTAGS (DT_RPATH) is used to specify paths
-    # for libraries that are directly linked to the executable new DTAGS (DT_RUNPATH) is used to specify paths for
-    # libraries that are transitively linked to the executable
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=2 -ftemplate-backtrace-limit=0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Wno-unknown-pragmas")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        # disable new DTAGS (DT_RUNPATH) since it is not supported in Ubuntu old DTAGS (DT_RPATH) is used to specify paths
+        # for libraries that are directly linked to the executable new DTAGS (DT_RUNPATH) is used to specify paths for
+        # libraries that are transitively linked to the executable
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--disable-new-dtags") # pass arguments to the linker
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=2 -ftemplate-backtrace-limit=0")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # For Clang, use -Wl, to pass the linker flag directly to the linker (ld or lld).
+        # This achieves the same goal of disabling new DTAGS.
+        # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--disable-new-dtags")
+        
+        # Clang supports the same diagnostics and expansion flags as GNU.
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0")
+    endif ()
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -funroll-loops -g")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects")

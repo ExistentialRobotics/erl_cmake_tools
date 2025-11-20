@@ -2,7 +2,7 @@ macro(erl_config_eigen)
     erl_find_package(
         PACKAGE Eigen3
         REQUIRED CONFIG # in case some other packages define FindEigen3.cmake
-        COMMANDS APPLE "try `brew install eigen`"
+        COMMANDS DARWIN "try `brew install eigen`"
         COMMANDS UBUNTU_LINUX "try `sudo apt install libeigen3-dev`"
         COMMANDS ARCH_LINUX "try `sudo pacman -S eigen`")
     set(EIGEN3_VERSION_STRING ${Eigen3_VERSION} CACHE STRING "Eigen3 version" FORCE)

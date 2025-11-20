@@ -1,7 +1,7 @@
 macro(erl_config_pybind11)
     erl_find_package(
         PACKAGE pybind11 REQUIRED
-        COMMANDS APPLE "try `brew install pybind11`"
+        COMMANDS DARWIN "try `brew install pybind11`"
         COMMANDS UBUNTU_LINUX "try `sudo apt install pybind11-dev`"
         COMMANDS ARCH_LINUX "try `sudo pacman -S pybind11`")
 

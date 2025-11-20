@@ -2,7 +2,13 @@
 macro(erl_config_plplot)
     option(ERL_USE_PLPLOT "Use PLPlot for visualization" ON)
     if (ERL_USE_PLPLOT)
-        erl_find_package(PACKAGE cairomm-1.0 PKGCONFIG REQUIRED cairomm-1.0)
+        if (APPLE)
+            erl_find_package(PACKAGE cairomm PKGCONFIG REQUIRED cairomm-1.16)
+            add_compile_definitions(CAIROMM_VERSION=116)
+        else()
+            erl_find_package(PACKAGE cairomm PKGCONFIG REQUIRED cairomm-1.0)
+            add_compile_definitions(CAIROMM_VERSION=100)
+        endif()
         erl_find_package(
             PACKAGE plplot REQUIRED
             COMMANDS ARCH_LINUX "try `paru -S plplot`"

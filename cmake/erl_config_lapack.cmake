@@ -1,9 +1,15 @@
 macro(erl_config_lapack)
     option(ERL_USE_LAPACK "Use LAPACK" ON)
     option(ERL_USE_LAPACK_STRICT "Use robust LAPACK algorithms only" OFF)
-    option(ERL_USE_INTEL_MKL "Use Intel MKL (Math Kernel Library)" ON)
+    if (APPLE)
+        option(ERL_USE_APPLE_BLAS "Use Apple's Accelerate framework" ON)
+        option(ERL_USE_INTEL_MKL "Use Intel MKL (Math Kernel Library)" OFF)
+    else()
+        option(ERL_USE_APPLE_BLAS "Use Apple's Accelerate framework" OFF)
+        option(ERL_USE_INTEL_MKL "Use Intel MKL (Math Kernel Library)" ON)
+        option(ERL_USE_SINGLE_THREADED_BLAS "Use single-threaded BLAS" ON)
+    endif ()
     option(ERL_USE_AOCL "Use AMD Optimizing CPU Library" OFF)
-    option(ERL_USE_SINGLE_THREADED_BLAS "Use single-threaded BLAS" ON)
 
     if (ERL_USE_INTEL_MKL AND ERL_USE_AOCL)
         message(FATAL_ERROR "ERL_USE_INTEL_MKL and ERL_USE_AOCL cannot be both ON")
@@ -23,9 +29,10 @@ macro(erl_config_lapack)
             PACKAGE LAPACKE
             REQUIRED
             NAMES lapacke.h
-            PATHS /usr/include /usr/local/include /usr/local/Cellar/lapack/*/include
+            PATHS /usr/include /usr/local/include /opt/homebrew/opt/lapack/include
             COMMANDS UBUNTU_LINUX "try `sudo apt install liblapacke-dev`"
-            COMMANDS ARCH_LINUX "try `sudo pacman -S lapacke`")
+            COMMANDS ARCH_LINUX "try `sudo pacman -S lapacke`"
+            COMMANDS DARWIN "try `brew install lapack`")
 
         if (ERL_USE_INTEL_MKL)
             # enable vectorization of Eigen, borrow from
@@ -134,10 +141,10 @@ macro(erl_config_lapack)
             list(APPEND BLAS_mkl_MKLROOT ${IOMP_ROOT})
             erl_find_package(
                 # LAPACK will resolve the full paths of MKL libraries
-                PACKAGE LAPACK #
-                REQUIRED #
-                COMMANDS APPLE "try `brew install lapack`" #
-                COMMANDS UBUNTU_LINUX "try `sudo apt install liblapack-dev`" #
+                PACKAGE LAPACK
+                REQUIRED
+                COMMANDS DARWIN "try `brew install lapack`"
+                COMMANDS UBUNTU_LINUX "try `sudo apt install liblapack-dev`"
                 COMMANDS ARCH_LINUX "try `sudo pacman -S lapack`")
 
             # set MKL_INCLUDE_DIRS to please catkin
@@ -185,6 +192,18 @@ macro(erl_config_lapack)
             endif ()
 
             set(LAPACK_LIBRARIES ${AOCL_ROOT}/lib/libflame.so)
+        elseif (ERL_USE_APPLE_BLAS)
+            message(STATUS "Use Apple's Accelerate framework")
+            add_compile_definitions(EIGEN_USE_BLAS)
+            add_compile_definitions(EIGEN_ERL_USE_LAPACKE)
+            set(BLA_VENDOR Apple)
+            erl_find_package(
+                PACKAGE LAPACK
+                REQUIRED
+                COMMANDS DARWIN "try `brew install lapack`"
+                COMMANDS UBUNTU_LINUX "try `sudo apt install liblapack-dev`"
+                COMMANDS ARCH_LINUX "try `sudo pacman -S lapack`")
+            # set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -framework Accelerate -l/opt/homebrew/opt/lapack/lib/liblapacke.dylib)
         else ()
             message(STATUS "Use OpenBLAS")
             add_compile_definitions(EIGEN_USE_BLAS)
@@ -193,20 +212,20 @@ macro(erl_config_lapack)
 
             if (ERL_USE_SINGLE_THREADED_BLAS)
                 erl_find_path(
-                    OUTPUT BLAS_LIB_DIR #
-                    PACKAGE OpenBLAS #
-                    REQUIRED #
-                    NAMES libopenblas.so #
-                    PATHS /usr/lib/x86_64-linux-gnu /opt/OpenBLAS/lib #
-                    COMMANDS APPLE "try `brew install openblas`" #
+                    OUTPUT BLAS_LIB_DIR
+                    PACKAGE OpenBLAS
+                    REQUIRED
+                    NAMES libopenblas.so
+                    PATHS /usr/lib/x86_64-linux-gnu /opt/OpenBLAS/lib
+                    COMMANDS DARWIN "try `brew install openblas`"
                     COMMANDS UBUNTU_LINUX "try `bash scripts/install_openblas_seq.bash`")
             endif ()
 
             erl_find_package(
-                PACKAGE LAPACK #
-                REQUIRED #
-                COMMANDS APPLE "try `brew install lapack`" #
-                COMMANDS UBUNTU_LINUX "try `sudo apt install liblapack-dev`" #
+                PACKAGE LAPACK
+                REQUIRED
+                COMMANDS DARWIN "try `brew install lapack`"
+                COMMANDS UBUNTU_LINUX "try `sudo apt install liblapack-dev`"
                 COMMANDS ARCH_LINUX "try `sudo pacman -S lapack`")
         endif ()
 
