@@ -791,6 +791,7 @@ macro(erl_setup_compiler)
     set(CMAKE_CXX_VISIBILITY_PRESET "default")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Wno-unknown-pragmas")
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
         # disable new DTAGS (DT_RUNPATH) since it is not supported in Ubuntu old DTAGS (DT_RPATH) is used to specify paths
         # for libraries that are directly linked to the executable new DTAGS (DT_RUNPATH) is used to specify paths for
         # libraries that are transitively linked to the executable
@@ -798,6 +799,7 @@ macro(erl_setup_compiler)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=2 -ftemplate-backtrace-limit=0")
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")
         # For Clang, use -Wl, to pass the linker flag directly to the linker (ld or lld).
         # This achieves the same goal of disabling new DTAGS.
         # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--disable-new-dtags")
@@ -808,8 +810,7 @@ macro(erl_setup_compiler)
     endif ()
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -funroll-loops -g")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto -ffat-lto-objects")
-    # -flto enables link-time optimization -ffat-lto-objects makes object files suitable for both LTO and non-LTO builds
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -flto")
 
     if (NOT CMAKE_OSX_DEPLOYMENT_TARGET)
         set(CMAKE_OSX_DEPLOYMENT_TARGET 15.0)

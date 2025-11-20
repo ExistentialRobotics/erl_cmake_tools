@@ -6,9 +6,8 @@ macro(erl_config_openmp)
             NAMES omp.h
             PATHS /opt/homebrew/opt/libomp/include
             COMMANDS DARWIN "try `brew install libomp`")
+        set(OpenMP_INCLUDE_DIRS /opt/homebrew/opt/libomp/include)
         set(OpenMP_LIBRARIES /opt/homebrew/opt/libomp/lib/libomp.dylib)
-        set(OpenMP_CXX_FLAGS "-I/opt/homebrew/opt/libomp/include")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     else ()
         erl_find_package(
             PACKAGE OpenMP
@@ -25,6 +24,5 @@ macro(erl_config_openmp)
         get_target_property(OpenMP_LIBRARIES OpenMP::OpenMP_CXX INTERFACE_LINK_LIBRARIES)
         message(STATUS "OpenMP_LIBRARIES: ${OpenMP_LIBRARIES}")
         message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     endif ()
 endmacro()
