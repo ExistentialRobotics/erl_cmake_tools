@@ -3,9 +3,10 @@ macro(erl_config_libzip)
     if (ERL_USE_LIBZIP)
         erl_find_package(
             PACKAGE libzip
-            REQUIRED
+            REQUIRED PKGCONFIG libzip
             COMMANDS ARCH_LINUX "try `sudo pacman -S libzip`"
             COMMANDS UBUNTU_LINUX "try `sudo apt-get install libzip-dev`"
+            
         )
 
         add_compile_definitions(ERL_USE_LIBZIP)

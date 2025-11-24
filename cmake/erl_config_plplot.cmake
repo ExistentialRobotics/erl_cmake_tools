@@ -3,10 +3,15 @@ macro(erl_config_plplot)
     option(ERL_USE_PLPLOT "Use PLPlot for visualization" ON)
     if (ERL_USE_PLPLOT)
         if (APPLE)
-            erl_find_package(PACKAGE cairomm PKGCONFIG REQUIRED cairomm-1.16)
+            erl_find_package(
+                PACKAGE cairomm PKGCONFIG REQUIRED cairomm-1.16
+                COMMANDS DARWIN "try `brew install cairomm`")
             add_compile_definitions(CAIROMM_VERSION=116)
         else()
-            erl_find_package(PACKAGE cairomm PKGCONFIG REQUIRED cairomm-1.0)
+            erl_find_package(
+                PACKAGE cairomm PKGCONFIG REQUIRED cairomm-1.0
+                COMMANDS UBUNTU_LINUX "try `sudo apt-get install libcairomm-1.0-dev`"
+                COMMANDS ARCH_LINUX "try `sudo pacman -S cairomm`")
             add_compile_definitions(CAIROMM_VERSION=100)
         endif()
         erl_find_package(
