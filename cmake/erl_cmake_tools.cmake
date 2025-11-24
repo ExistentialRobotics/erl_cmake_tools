@@ -607,14 +607,10 @@ macro(erl_detect_ros)
         message(STATUS "ROS_VERSION: ${ROS_VERSION}")
         add_compile_definitions(ERL_ROS_VERSION_1)
         set(ROS1_ACTIVATED ON)
-        set(ROS_DISTRO "$ENV{ROS_DISTRO}")
-        add_compile_definitions(ROS_DISTRO=${ROS_DISTRO})
     elseif (ROS_VERSION STREQUAL "2")
         message(STATUS "ROS_VERSION: ${ROS_VERSION}")
         add_compile_definitions(ERL_ROS_VERSION_2)
         set(ROS2_ACTIVATED ON)
-        set(ROS_DISTRO "$ENV{ROS_DISTRO}")
-        add_compile_definitions(ROS_DISTRO=${ROS_DISTRO})
     else ()
         message(STATUS "No ROS detected")
     endif ()
@@ -940,6 +936,11 @@ endmacro()
 # erl_setup_ros1
 # ######################################################################################################################
 macro(erl_setup_ros1)
+
+    set(ROS_DISTRO "$ENV{ROS_DISTRO}")
+    string(TOUPPER "${ROS_DISTRO}" ROS_DISTRO)
+    add_compile_definitions(ROS_${ROS_DISTRO})
+
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/package.xml)
         message(FATAL_ERROR "No package.xml found in ${CMAKE_CURRENT_LIST_DIR}")
     endif ()
@@ -1064,6 +1065,11 @@ endmacro()
 # erl_setup_ros2
 # ######################################################################################################################
 macro(erl_setup_ros2)
+
+    set(ROS_DISTRO "$ENV{ROS_DISTRO}")
+    string(TOUPPER "${ROS_DISTRO}" ROS_DISTRO)
+    add_compile_definitions(ROS_${ROS_DISTRO})
+
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/package.xml)
         message(FATAL_ERROR "No package.xml found in ${CMAKE_CURRENT_LIST_DIR}")
     endif ()
@@ -1463,7 +1469,7 @@ macro(erl_dump_compile_definitions output_file)
             if (definition STREQUAL "NDEBUG")
                 continue() # NDEBUG is handled by CMAKE_BUILD_TYPE
             endif ()
-            if (definition MATCHES "ROS(.*)")
+            if (definition MATCHES "ROS(.*)")  # handled by erl_setup_ros()
                 continue()
             endif ()
             message(STATUS "  ${definition}")
