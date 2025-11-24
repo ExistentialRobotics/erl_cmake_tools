@@ -10,7 +10,7 @@ build_type = "Release"
 
 [project]
 name = "erl_cmake_tools"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python package for erl_cmake_tools"
 authors = [
     { name = "Zhirui Dai", email = "daizhirui@hotmail.com" }
