@@ -803,7 +803,6 @@ macro(erl_setup_compiler)
         # For Clang, use -Wl, to pass the linker flag directly to the linker (ld or lld).
         # This achieves the same goal of disabling new DTAGS.
         # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--disable-new-dtags")
-        
         # Clang supports the same diagnostics and expansion flags as GNU.
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color -fdiagnostics-show-template-tree")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0")

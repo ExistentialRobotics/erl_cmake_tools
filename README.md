@@ -41,7 +41,7 @@ git clone https://github.com/ExistentialRobotics/erl_cmake_tools.git
 2. Then, you can use the utilities provided by `erl_cmake_tools` in other `CMakeLists.txt`.
    For example:
     ```cmake
-    cmake_minimum_required(VERSION 3.24)
+    cmake_minimum_required(VERSION 3.16)
 
     project(erl_covariance
             LANGUAGES CXX
