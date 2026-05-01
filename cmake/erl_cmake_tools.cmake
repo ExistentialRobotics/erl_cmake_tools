@@ -1682,18 +1682,12 @@ macro(erl_install)
 
         if (EXISTS ${${PROJECT_NAME}_LAUNCH_DIR})
             install(DIRECTORY ${${PROJECT_NAME}_LAUNCH_DIR}
-                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR}
-                    USE_SOURCE_PERMISSIONS
-                    FILES_MATCHING PATTERN "*launch.py"
-            )
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
         endif ()
 
         if (EXISTS ${${PROJECT_NAME}_RVIZ_DIR})
-            install(DIRECTORY ${${PROJECT_NAME}_RVIZ_DIR} #
-                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR} #
-                    USE_SOURCE_PERMISSIONS #
-                    FILES_MATCHING PATTERN "*.rviz" #
-            )
+            install(DIRECTORY ${${PROJECT_NAME}_RVIZ_DIR}
+                    DESTINATION ${${PROJECT_NAME}_INSTALL_SHARE_DIR})
         endif ()
 
         if (EXISTS ${${PROJECT_NAME}_CONFIG_DIR})
